@@ -1,0 +1,13 @@
+program SpacingTest;
+
+var
+  x, y: integer;
+
+begin
+  x := 1;
+
+  y := x + 2;
+  writeln('x = ', x);
+  writeln('y = ', y);
+
+end.

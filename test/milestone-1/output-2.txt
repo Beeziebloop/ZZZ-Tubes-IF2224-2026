@@ -1,0 +1,41 @@
+programsy
+ident (SpacingTest)
+semicolon
+
+varsy
+ident (x)
+comma
+ident (y)
+colon
+ident (integer)
+semicolon
+
+beginsy
+ident (x)
+becomes
+intcon (1)
+semicolon
+
+ident (y)
+becomes
+ident (x)
+plus
+intcon (2)
+semicolon
+ident (writeln)
+lparent
+string ('x = ')
+comma
+ident (x)
+rparent
+semicolon
+ident (writeln)
+lparent
+string ('y = ')
+comma
+ident (y)
+rparent
+semicolon
+
+endsy
+period
