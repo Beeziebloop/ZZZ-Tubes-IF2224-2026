@@ -1,0 +1,28 @@
+programsy
+ident (MixCase)
+semicolon
+
+varsy
+ident (Alpha1)
+comma
+ident (beta2)
+colon
+ident (integer)
+semicolon
+
+beginsy
+
+ident (Alpha1)
+becomes
+intcon (12)
+semicolon
+
+ident (beta2)
+becomes
+ident (Alpha1)
+plus
+intcon (3)
+semicolon
+
+endsy
+period

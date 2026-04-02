@@ -1,0 +1,15 @@
+program CompareOps;
+
+var
+  a, b: integer;
+
+begin
+  a := 10;
+  b := 20;
+  if a <= b then writeln('leq');
+  if a <> b then writeln('neq');
+  if b >= a then writeln('geq');
+  if a < b then writeln('lss');
+  if b > a then writeln('gtr');
+  if a == a then writeln('eql');
+end.

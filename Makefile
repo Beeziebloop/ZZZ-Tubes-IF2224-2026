@@ -11,7 +11,7 @@ SRCS     = $(SRC_DIR)/main.cpp $(SRC_DIR)/lex_analyzer.cpp
 TARGET   = $(BIN_DIR)/lexer
 
 # Default target
-all: $(BIN_DIR) $(TARGET)
+all: $(BIN_DIR) $(TARGET) 
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)

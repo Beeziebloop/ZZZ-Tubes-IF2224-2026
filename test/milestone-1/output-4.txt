@@ -1,0 +1,35 @@
+programsy
+ident (LiteralsTest)
+semicolon
+
+varsy
+ident (x)
+colon
+ident (integer)
+semicolon
+
+beginsy
+ident (x)
+becomes
+intcon (7)
+semicolon
+ident (writeln)
+lparent
+charcon ('A')
+rparent
+semicolon
+ident (writeln)
+lparent
+string ('I'm here')
+rparent
+semicolon
+ident (writeln)
+lparent
+string ('value = ')
+comma
+realcon (3.1415)
+rparent
+semicolon
+
+endsy
+period

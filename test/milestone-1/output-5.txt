@@ -1,0 +1,84 @@
+programsy
+ident (CompareOps)
+semicolon
+
+varsy
+ident (a)
+comma
+ident (b)
+colon
+ident (integer)
+semicolon
+
+beginsy
+ident (a)
+becomes
+intcon (10)
+semicolon
+ident (b)
+becomes
+intcon (20)
+semicolon
+ifsy
+ident (a)
+leq
+ident (b)
+thensy
+ident (writeln)
+lparent
+string ('leq')
+rparent
+semicolon
+ifsy
+ident (a)
+neq
+ident (b)
+thensy
+ident (writeln)
+lparent
+string ('neq')
+rparent
+semicolon
+ifsy
+ident (b)
+geq
+ident (a)
+thensy
+ident (writeln)
+lparent
+string ('geq')
+rparent
+semicolon
+ifsy
+ident (a)
+lss
+ident (b)
+thensy
+ident (writeln)
+lparent
+string ('lss')
+rparent
+semicolon
+ifsy
+ident (b)
+gtr
+ident (a)
+thensy
+ident (writeln)
+lparent
+string ('gtr')
+rparent
+semicolon
+ifsy
+ident (a)
+eql
+ident (a)
+thensy
+ident (writeln)
+lparent
+string ('eql')
+rparent
+semicolon
+
+endsy
+period
