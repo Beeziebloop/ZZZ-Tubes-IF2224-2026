@@ -1,0 +1,14 @@
+# Build output
+bin/
+
+# Compiled object files
+*.o
+*.obj
+
+# Compiled executables
+*.exe
+*.out
+*.app
+
+# VS Code (opsional, hapus kalau mau track .vscode)
+.vscode/
