@@ -3,34 +3,46 @@
 #include <sstream>
 
 /* Filter token COMMENT dan BLANK_LINE — parser tidak butuh keduanya. */
-Parser::Parser(const std::vector<Token>& rawTokens) : pos(0) {
-    for (const Token& tok : rawTokens) {
-        if (tok.type == COMMENT) continue;
-        if (tok.type == BLANK_LINE) continue;
+Parser::Parser(const std::vector<Token> &rawTokens) : pos(0)
+{
+    for (const Token &tok : rawTokens)
+    {
+        if (tok.type == COMMENT)
+            continue;
+        if (tok.type == BLANK_LINE)
+            continue;
         tokens.push_back(tok);
     }
 }
 
 /* TOKEN CONSUMER */
 
-Token Parser::peek() const {
-    if (pos < (int)tokens.size()) return tokens[pos];
+Token Parser::peek() const
+{
+    if (pos < (int)tokens.size())
+        return tokens[pos];
     return Token(EOF_TOKEN, "", -1);
 }
 
-Token Parser::peekAt(int offset) const {
+Token Parser::peekAt(int offset) const
+{
     int idx = pos + offset;
-    if (idx < (int)tokens.size()) return tokens[idx];
+    if (idx < (int)tokens.size())
+        return tokens[idx];
     return Token(EOF_TOKEN, "", -1);
 }
 
-Token Parser::advance() {
-    if (pos < (int)tokens.size()) return tokens[pos++];
+Token Parser::advance()
+{
+    if (pos < (int)tokens.size())
+        return tokens[pos++];
     return Token(EOF_TOKEN, "", -1);
 }
 
-Token Parser::expect(TokenType type) {
-    if (check(type)) return advance();
+Token Parser::expect(TokenType type)
+{
+    if (check(type))
+        return advance();
     std::ostringstream msg;
     msg << "Syntax error at line " << peek().line
         << ": unexpected token '" << tokenLabel(peek())
@@ -38,26 +50,36 @@ Token Parser::expect(TokenType type) {
     throw ParseError(msg.str(), peek().line);
 }
 
-bool Parser::check(TokenType type) const {
+bool Parser::check(TokenType type) const
+{
     return peek().type == type;
 }
 
-bool Parser::checkAny(const std::vector<TokenType>& types) const {
+bool Parser::checkAny(const std::vector<TokenType> &types) const
+{
     for (TokenType t : types)
-        if (check(t)) return true;
+        if (check(t))
+            return true;
     return false;
 }
 
-bool Parser::match(TokenType type) {
-    if (check(type)) { advance(); return true; }
+bool Parser::match(TokenType type)
+{
+    if (check(type))
+    {
+        advance();
+        return true;
+    }
     return false;
 }
 
-bool Parser::isAtEnd() const {
+bool Parser::isAtEnd() const
+{
     return peek().type == EOF_TOKEN;
 }
 
-void Parser::error(const std::string& expected) {
+void Parser::error(const std::string &expected)
+{
     std::ostringstream msg;
     msg << "Syntax error at line " << peek().line
         << ": unexpected token '" << tokenLabel(peek())
@@ -66,103 +88,172 @@ void Parser::error(const std::string& expected) {
 }
 
 /* helper yg return representasi string dari sebuah token untuk label node. */
-std::string Parser::tokenLabel(const Token& tok) const {
-    switch (tok.type) {
-        case INTCON:      return "intcon(" + tok.value + ")";
-        case REALCON:     return "realcon(" + tok.value + ")";
-        case CHARCON:     return "charcon('" + tok.value + "')";
-        case STRING:      return "string('" + tok.value + "')";
-        case IDENT:       return "ident(" + tok.value + ")";
-        case UNKNOWN:     return "unknown(" + tok.value + ")";
-        case NOTSY:       return "notsy";
-        case ANDSY:       return "andsy";
-        case ORSY:        return "orsy";
-        case PLUS:        return "plus";
-        case MINUS:       return "minus";
-        case TIMES:       return "times";
-        case IDIV:        return "idiv";
-        case RDIV:        return "rdiv";
-        case IMOD:        return "imod";
-        case EQL:         return "eql";
-        case NEQ:         return "neq";
-        case GTR:         return "gtr";
-        case GEQ:         return "geq";
-        case LSS:         return "lss";
-        case LEQ:         return "leq";
-        case LPARENT:     return "lparent";
-        case RPARENT:     return "rparent";
-        case LBRACK:      return "lbrack";
-        case RBRACK:      return "rbrack";
-        case COMMA:       return "comma";
-        case SEMICOLON:   return "semicolon";
-        case PERIOD:      return "period";
-        case COL:         return "colon";
-        case BECOMES:     return "becomes";
-        case CONSTSY:     return "constsy";
-        case TYPESY:      return "typesy";
-        case VARSY:       return "varsy";
-        case FUNCTIONSY:  return "functionsy";
-        case PROCEDURESY: return "proceduresy";
-        case ARRAYSY:     return "arraysy";
-        case RECORDSY:    return "recordsy";
-        case PROGRAMSY:   return "programsy";
-        case BEGINSY:     return "beginsy";
-        case IFSY:        return "ifsy";
-        case CASESY:      return "casesy";
-        case REPEATSY:    return "repeatsy";
-        case WHILESY:     return "whilesy";
-        case FORSY:       return "forsy";
-        case ENDSY:       return "endsy";
-        case ELSESY:      return "elsesy";
-        case UNTILSY:     return "untilsy";
-        case OFSY:        return "ofsy";
-        case DOSY:        return "dosy";
-        case TOSY:        return "tosy";
-        case DOWNTOSY:    return "downtosy";
-        case THENSY:      return "thensy";
-        case EOF_TOKEN:   return "EOF";
-        case COMMENT:     return "comment";
-        default:          return "unknown";
+std::string Parser::tokenLabel(const Token &tok) const
+{
+    switch (tok.type)
+    {
+    case INTCON:
+        return "intcon(" + tok.value + ")";
+    case REALCON:
+        return "realcon(" + tok.value + ")";
+    case CHARCON:
+        return "charcon('" + tok.value + "')";
+    case STRING:
+        return "string('" + tok.value + "')";
+    case IDENT:
+        return "ident(" + tok.value + ")";
+    case UNKNOWN:
+        return "unknown(" + tok.value + ")";
+    case NOTSY:
+        return "notsy";
+    case ANDSY:
+        return "andsy";
+    case ORSY:
+        return "orsy";
+    case PLUS:
+        return "plus";
+    case MINUS:
+        return "minus";
+    case TIMES:
+        return "times";
+    case IDIV:
+        return "idiv";
+    case RDIV:
+        return "rdiv";
+    case IMOD:
+        return "imod";
+    case EQL:
+        return "eql";
+    case NEQ:
+        return "neq";
+    case GTR:
+        return "gtr";
+    case GEQ:
+        return "geq";
+    case LSS:
+        return "lss";
+    case LEQ:
+        return "leq";
+    case LPARENT:
+        return "lparent";
+    case RPARENT:
+        return "rparent";
+    case LBRACK:
+        return "lbrack";
+    case RBRACK:
+        return "rbrack";
+    case COMMA:
+        return "comma";
+    case SEMICOLON:
+        return "semicolon";
+    case PERIOD:
+        return "period";
+    case COL:
+        return "colon";
+    case BECOMES:
+        return "becomes";
+    case CONSTSY:
+        return "constsy";
+    case TYPESY:
+        return "typesy";
+    case VARSY:
+        return "varsy";
+    case FUNCTIONSY:
+        return "functionsy";
+    case PROCEDURESY:
+        return "proceduresy";
+    case ARRAYSY:
+        return "arraysy";
+    case RECORDSY:
+        return "recordsy";
+    case PROGRAMSY:
+        return "programsy";
+    case BEGINSY:
+        return "beginsy";
+    case IFSY:
+        return "ifsy";
+    case CASESY:
+        return "casesy";
+    case REPEATSY:
+        return "repeatsy";
+    case WHILESY:
+        return "whilesy";
+    case FORSY:
+        return "forsy";
+    case ENDSY:
+        return "endsy";
+    case ELSESY:
+        return "elsesy";
+    case UNTILSY:
+        return "untilsy";
+    case OFSY:
+        return "ofsy";
+    case DOSY:
+        return "dosy";
+    case TOSY:
+        return "tosy";
+    case DOWNTOSY:
+        return "downtosy";
+    case THENSY:
+        return "thensy";
+    case EOF_TOKEN:
+        return "EOF";
+    case COMMENT:
+        return "comment";
+    default:
+        return "unknown";
     }
 }
 
 /*helper makeTerminal Buat ParseNode terminal dari token yang sudah di-consume. */
-ParseNode* Parser::makeTerminal(const Token& tok) {
+ParseNode *Parser::makeTerminal(const Token &tok)
+{
     return new ParseNode(tokenLabel(tok));
 }
 
 /* Helper rekursif internal untuk printTree. */
-static void printTreeHelper(ParseNode* node, std::ostream& out,
-                             const std::string& prefix, bool isLast) {
-    if (!node) return;
+static void printTreeHelper(ParseNode *node, std::ostream &out,
+                            const std::string &prefix, bool isLast)
+{
+    if (!node)
+        return;
     out << prefix << (isLast ? "└── " : "├── ") << node->label << "\n";
     std::string childPrefix = prefix + (isLast ? "    " : "│   ");
-    for (int i = 0; i < (int)node->children.size(); i++) {
+    for (int i = 0; i < (int)node->children.size(); i++)
+    {
         bool last = (i == (int)node->children.size() - 1);
         printTreeHelper(node->children[i], out, childPrefix, last);
     }
 }
 
 /* Format output dengan karakter box-drawing seperti di spesifikasi. */
-void Parser::printTree(ParseNode* node, std::ostream& out,
-                       const std::string& prefix, bool isLast) {
-    if (!node) return;
-    if (prefix.empty()) {
+void Parser::printTree(ParseNode *node, std::ostream &out,
+                       const std::string &prefix, bool isLast)
+{
+    if (!node)
+        return;
+    if (prefix.empty())
+    {
         /* Root: cetak label tanpa connector, children mulai dari level 1 */
         out << node->label << "\n";
-        for (int i = 0; i < (int)node->children.size(); i++) {
+        for (int i = 0; i < (int)node->children.size(); i++)
+        {
             bool last = (i == (int)node->children.size() - 1);
             printTreeHelper(node->children[i], out, "", last);
         }
-    } else {
+    }
+    else
+    {
         printTreeHelper(node, out, prefix, isLast);
     }
 }
 
 /* ENTRY POINT: parse() */
-ParseNode* Parser::parse() {
-    ParseNode* tree = parseProgram();
-    if (!isAtEnd()) {
+ParseNode *Parser::parse()
+{
+    ParseNode *tree = parseProgram();
+    if (!isAtEnd())
+    {
         error("end of file");
     }
     return tree;
@@ -170,20 +261,90 @@ ParseNode* Parser::parse() {
 
 /* job 1: Program Structure & Declarations  */
 
-ParseNode* Parser::parseProgram() {}
-ParseNode* Parser::parseProgramHeader() {}
-ParseNode* Parser::parseDeclarationPart() {}
-ParseNode* Parser::parseConstDeclaration() {}
+// program -> program_header declaration_part block .
+ParseNode *Parser::parseProgram()
+{
+    ParseNode *node = new ParseNode("<program>");
+
+    node->addChild(parseProgramHeader());
+    node->addChild(parseDeclarationPart());
+    node->addChild(parseBlock());
+
+    node->addChild(makeTerminal(expect(TokenType::PERIOD)));
+
+    return node;
+}
+
+// program_header -> program ident ;
+ParseNode *Parser::parseProgramHeader()
+{
+    ParseNode *node = new ParseNode("<program_header>");
+
+    node->addChild(makeTerminal(expect(TokenType::PROGRAMSY)));
+    node->addChild(makeTerminal(expect(TokenType::IDENT)));
+    node->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+
+    return node;
+}
+
+// declaration_part -> const_decl type_decl var_decl subprogram_decl
+ParseNode *Parser::parseDeclarationPart()
+{
+    ParseNode *node = new ParseNode("<declaration_part>");
+
+    if (check(TokenType::CONSTSY))
+        node->addChild(parseConstDeclaration());
+
+    if (check(TokenType::TYPESY))
+        node->addChild(parseTypeDeclaration());
+
+    if (check(TokenType::VARSY))
+        node->addChild(parseVarDeclaration());
+
+    while (checkAny({TokenType::PROCEDURESY, TokenType::FUNCTIONSY}))
+        node->addChild(parseSubprogramDeclaration());
+
+    return node;
+}
+
+// const_decl -> const ident = constant ;
+ParseNode *Parser::parseConstDeclaration()
+{
+    ParseNode *node = new ParseNode("<const_decl>");
+
+    node->addChild(makeTerminal(expect(TokenType::CONSTSY)));
+
+    while (check(TokenType::IDENT))
+    {
+        ParseNode *decl = new ParseNode("<const_item>");
+
+        decl->addChild(makeTerminal(expect(TokenType::IDENT)));
+        decl->addChild(makeTerminal(expect(TokenType::EQL)));
+        decl->addChild(parseConstant());
+        decl->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+
+        node->addChild(decl);
+    }
+
+    return node;
+}
+
 /* PARSE CONSTANT
- * constant → charcon | string | [(plus | minus)? + (ident | intcon | realcon)]
+ * constant -> charcon | string | [(plus | minus)? + (ident | intcon | realcon)]
  * Diimplementasikan di sini karena dibutuhkan oleh parseCaseBlock (job 2). */
-ParseNode* Parser::parseConstant() {
-    ParseNode* node = new ParseNode("<constant>");
-    if (check(CHARCON)) {
+ParseNode *Parser::parseConstant()
+{
+    ParseNode *node = new ParseNode("<constant>");
+    if (check(CHARCON))
+    {
         node->addChild(makeTerminal(advance()));
-    } else if (check(STRING)) {
+    }
+    else if (check(STRING))
+    {
         node->addChild(makeTerminal(advance()));
-    } else {
+    }
+    else
+    {
         // Optional sign
         if (check(PLUS) || check(MINUS))
             node->addChild(makeTerminal(advance()));
@@ -194,29 +355,254 @@ ParseNode* Parser::parseConstant() {
     }
     return node;
 }
-ParseNode* Parser::parseTypeDeclaration() {}
-ParseNode* Parser::parseType() {}
-ParseNode* Parser::parseArrayType() {}
-ParseNode* Parser::parseRange() {}
-ParseNode* Parser::parseEnumerated() {}
-ParseNode* Parser::parseRecordType() {}
-ParseNode* Parser::parseFieldList() {}
-ParseNode* Parser::parseFieldPart() {}
-ParseNode* Parser::parseVarDeclaration() {}
-ParseNode* Parser::parseIdentifierList() {}
-ParseNode* Parser::parseSubprogramDeclaration() {}
-ParseNode* Parser::parseProcedureDeclaration() {}
-ParseNode* Parser::parseFunctionDeclaration() {}
-ParseNode* Parser::parseFormalParameterList() {}
-ParseNode* Parser::parseParameterGroup() {}
-ParseNode* Parser::parseBlock() {}
+
+// type_decl -> type ident = type ;
+ParseNode *Parser::parseTypeDeclaration()
+{
+    ParseNode *node = new ParseNode("<type_decl>");
+
+    node->addChild(makeTerminal(expect(TokenType::TYPESY)));
+
+    while (check(TokenType::IDENT))
+    {
+        ParseNode *decl = new ParseNode("<type_item>");
+
+        decl->addChild(makeTerminal(expect(TokenType::IDENT)));
+        decl->addChild(makeTerminal(expect(TokenType::EQL)));
+        decl->addChild(parseType());
+        decl->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+
+        node->addChild(decl);
+    }
+
+    return node;
+}
+
+// type -> array | record | (range/enumerated/alias)
+ParseNode *Parser::parseType()
+{
+    ParseNode *node = new ParseNode("<type>");
+
+    if (check(TokenType::ARRAYSY))
+        node->addChild(parseArrayType());
+    else if (check(TokenType::RECORDSY))
+        node->addChild(parseRecordType());
+    else if (check(TokenType::LPARENT))
+        node->addChild(parseEnumerated());
+    else
+        node->addChild(makeTerminal(expect(TokenType::IDENT)));
+
+    return node;
+}
+
+// array_type -> array [ range ] of type
+ParseNode *Parser::parseArrayType()
+{
+    ParseNode *node = new ParseNode("<array_type>");
+
+    node->addChild(makeTerminal(expect(TokenType::ARRAYSY)));
+    node->addChild(makeTerminal(expect(TokenType::LBRACK)));
+    node->addChild(parseRange());
+    node->addChild(makeTerminal(expect(TokenType::RBRACK)));
+    node->addChild(makeTerminal(expect(TokenType::OFSY)));
+    node->addChild(parseType());
+
+    return node;
+}
+
+// range -> constant .. constant
+ParseNode *Parser::parseRange()
+{
+    ParseNode *node = new ParseNode("<range>");
+
+    node->addChild(parseConstant());
+    node->addChild(makeTerminal(expect(TokenType::PERIOD)));
+    node->addChild(makeTerminal(expect(TokenType::PERIOD)));
+    node->addChild(parseConstant());
+
+    return node;
+}
+
+// enumerated -> ( ident { , ident } )
+ParseNode *Parser::parseEnumerated()
+{
+    ParseNode *node = new ParseNode("<enumerated>");
+
+    node->addChild(makeTerminal(expect(TokenType::LPARENT)));
+
+    node->addChild(makeTerminal(expect(TokenType::IDENT)));
+    while (match(TokenType::COMMA))
+        node->addChild(makeTerminal(expect(TokenType::IDENT)));
+
+    node->addChild(makeTerminal(expect(TokenType::RPARENT)));
+
+    return node;
+}
+
+// record_type -> record field_list end
+ParseNode *Parser::parseRecordType()
+{
+    ParseNode *node = new ParseNode("<record_type>");
+
+    node->addChild(makeTerminal(expect(TokenType::RECORDSY)));
+    node->addChild(parseFieldList());
+    node->addChild(makeTerminal(expect(TokenType::ENDSY)));
+
+    return node;
+}
+
+// field_list -> field_part { ; field_part }
+ParseNode *Parser::parseFieldList()
+{
+    ParseNode *node = new ParseNode("<field_list>");
+
+    node->addChild(parseFieldPart());
+
+    while (match(TokenType::SEMICOLON))
+        node->addChild(parseFieldPart());
+
+    return node;
+}
+
+// field_part -> identifier_list : type
+ParseNode *Parser::parseFieldPart()
+{
+    ParseNode *node = new ParseNode("<field_part>");
+
+    node->addChild(parseIdentifierList());
+    node->addChild(makeTerminal(expect(TokenType::COL)));
+    node->addChild(parseType());
+
+    return node;
+}
+
+// var_decl -> var identifier_list : type ;
+ParseNode *Parser::parseVarDeclaration()
+{
+    ParseNode *node = new ParseNode("<var_decl>");
+
+    node->addChild(makeTerminal(expect(TokenType::VARSY)));
+
+    while (check(TokenType::IDENT))
+    {
+        ParseNode *decl = new ParseNode("<var_item>");
+
+        decl->addChild(parseIdentifierList());
+        decl->addChild(makeTerminal(expect(TokenType::COL)));
+        decl->addChild(parseType());
+        decl->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+
+        node->addChild(decl);
+    }
+
+    return node;
+}
+
+ParseNode *Parser::parseIdentifierList()
+{
+    ParseNode *node = new ParseNode("<identifier_list>");
+
+    node->addChild(makeTerminal(expect(TokenType::IDENT)));
+
+    while (match(TokenType::COMMA))
+        node->addChild(makeTerminal(expect(TokenType::IDENT)));
+
+    return node;
+}
+
+// identifier_list -> ident { , ident }
+ParseNode *Parser::parseSubprogramDeclaration()
+{
+    if (check(TokenType::PROCEDURESY))
+        return parseProcedureDeclaration();
+    else
+        return parseFunctionDeclaration();
+}
+
+// subprogram_decl -> procedure_decl | function_decl
+ParseNode *Parser::parseProcedureDeclaration()
+{
+    ParseNode *node = new ParseNode("<procedure_decl>");
+
+    node->addChild(makeTerminal(expect(TokenType::PROCEDURESY)));
+    node->addChild(makeTerminal(expect(TokenType::IDENT)));
+
+    if (check(TokenType::LPARENT))
+        node->addChild(parseFormalParameterList());
+
+    node->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+    node->addChild(parseBlock());
+    node->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+
+    return node;
+}
+
+// procedure_decl -> procedure ident (...) ; block ;
+ParseNode *Parser::parseFunctionDeclaration()
+{
+    ParseNode *node = new ParseNode("<function_decl>");
+
+    node->addChild(makeTerminal(expect(TokenType::FUNCTIONSY)));
+    node->addChild(makeTerminal(expect(TokenType::IDENT)));
+
+    if (check(TokenType::LPARENT))
+        node->addChild(parseFormalParameterList());
+
+    node->addChild(makeTerminal(expect(TokenType::COL)));
+    node->addChild(parseType());
+
+    node->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+    node->addChild(parseBlock());
+    node->addChild(makeTerminal(expect(TokenType::SEMICOLON)));
+
+    return node;
+}
+
+// formal_parameter_list -> ( parameter_group { ; parameter_group } )
+ParseNode *Parser::parseFormalParameterList()
+{
+    ParseNode *node = new ParseNode("<formal_params>");
+
+    node->addChild(makeTerminal(expect(TokenType::LPARENT)));
+
+    node->addChild(parseParameterGroup());
+    while (match(TokenType::SEMICOLON))
+        node->addChild(parseParameterGroup());
+
+    node->addChild(makeTerminal(expect(TokenType::RPARENT)));
+
+    return node;
+}
+
+// parameter_group -> identifier_list : type
+ParseNode *Parser::parseParameterGroup()
+{
+    ParseNode *node = new ParseNode("<param_group>");
+
+    node->addChild(parseIdentifierList());
+    node->addChild(makeTerminal(expect(TokenType::COL)));
+    node->addChild(parseType());
+
+    return node;
+}
+
+// parameter_group -> identifier_list : type
+ParseNode *Parser::parseBlock()
+{
+    ParseNode *node = new ParseNode("<block>");
+
+    node->addChild(parseCompoundStatement());
+
+    return node;
+}
 
 /* job 2: Statements */
 
 /* PARSE COMPOUND STATEMENT
  * compound-statement → beginsy + statement-list + endsy */
-ParseNode* Parser::parseCompoundStatement() {
-    ParseNode* node = new ParseNode("<compound-statement>");
+ParseNode *Parser::parseCompoundStatement()
+{
+    ParseNode *node = new ParseNode("<compound-statement>");
     node->addChild(makeTerminal(expect(BEGINSY)));
     node->addChild(parseStatementList());
     node->addChild(makeTerminal(expect(ENDSY)));
@@ -225,10 +611,12 @@ ParseNode* Parser::parseCompoundStatement() {
 
 /* PARSE STATEMENT LIST
  * statement-list → statement (semicolon + statement)* */
-ParseNode* Parser::parseStatementList() {
-    ParseNode* node = new ParseNode("<statement-list>");
+ParseNode *Parser::parseStatementList()
+{
+    ParseNode *node = new ParseNode("<statement-list>");
     node->addChild(parseStatement());
-    while (check(SEMICOLON)) {
+    while (check(SEMICOLON))
+    {
         node->addChild(makeTerminal(advance())); // semicolon
         node->addChild(parseStatement());
     }
@@ -239,30 +627,47 @@ ParseNode* Parser::parseStatementList() {
  * ident diikuti becomes ->  assignment,
  * ident diikuti lparent (atau langsung ke statement lain) ->  proc/func-call,
  * ident berdiri sendiri (variable access) -> assignment (setelah component-variable.) */
-ParseNode* Parser::parseStatement() {
-    ParseNode* node = new ParseNode("<statement>");
+ParseNode *Parser::parseStatement()
+{
+    ParseNode *node = new ParseNode("<statement>");
 
-    if (check(BEGINSY)) {
+    if (check(BEGINSY))
+    {
         node->addChild(parseCompoundStatement());
-    } else if (check(IFSY)) {
+    }
+    else if (check(IFSY))
+    {
         node->addChild(parseIfStatement());
-    } else if (check(CASESY)) {
+    }
+    else if (check(CASESY))
+    {
         node->addChild(parseCaseStatement());
-    } else if (check(WHILESY)) {
+    }
+    else if (check(WHILESY))
+    {
         node->addChild(parseWhileStatement());
-    } else if (check(REPEATSY)) {
+    }
+    else if (check(REPEATSY))
+    {
         node->addChild(parseRepeatStatement());
-    } else if (check(FORSY)) {
+    }
+    else if (check(FORSY))
+    {
         node->addChild(parseForStatement());
-    } else if (check(IDENT)) {
+    }
+    else if (check(IDENT))
+    {
         /* Perlu lookahead untuk membedakan assignment vs proc/func-call.
          * Procedure/function-call: ident langsung diikuti lparent.
          * Assignment: ident (component-variable)* becomes.
          * Untuk menentukan, scan ke depan melewati component-variable. */
-        if (peekAt(1).type == LPARENT) {
+        if (peekAt(1).type == LPARENT)
+        {
             // ident( ... ) → procedure/function-call sebagai statement
             node->addChild(parseProcedureFunctionCall());
-        } else {
+        }
+        else
+        {
             /* Coba parse sebagai assignment. Jika setelah ident ada
              * '[' atau '.' maka ini variable dengan component, lalu harus
              * diikuti becomes. Jika ident langsung diikuti becomes → assignment.
@@ -277,8 +682,9 @@ ParseNode* Parser::parseStatement() {
 
 /* PARSE ASSIGNMENT STATEMENT
  * assignment-statement → variable + becomes + expression */
-ParseNode* Parser::parseAssignmentStatement() {
-    ParseNode* node = new ParseNode("<assignment-statement>");
+ParseNode *Parser::parseAssignmentStatement()
+{
+    ParseNode *node = new ParseNode("<assignment-statement>");
     node->addChild(parseVariable());
     node->addChild(makeTerminal(expect(BECOMES)));
     node->addChild(parseExpression());
@@ -287,13 +693,15 @@ ParseNode* Parser::parseAssignmentStatement() {
 
 /* PARSE IF STATEMENT
  * if-statement → ifsy + expression + thensy + statement (elsesy + statement)? */
-ParseNode* Parser::parseIfStatement() {
-    ParseNode* node = new ParseNode("<if-statement>");
+ParseNode *Parser::parseIfStatement()
+{
+    ParseNode *node = new ParseNode("<if-statement>");
     node->addChild(makeTerminal(expect(IFSY)));
     node->addChild(parseExpression());
     node->addChild(makeTerminal(expect(THENSY)));
     node->addChild(parseStatement());
-    if (check(ELSESY)) {
+    if (check(ELSESY))
+    {
         node->addChild(makeTerminal(advance())); // elsesy
         node->addChild(parseStatement());
     }
@@ -302,8 +710,9 @@ ParseNode* Parser::parseIfStatement() {
 
 /* PARSE CASE STATEMENT
  * case-statement → casesy + expression + ofsy + case-block + endsy */
-ParseNode* Parser::parseCaseStatement() {
-    ParseNode* node = new ParseNode("<case-statement>");
+ParseNode *Parser::parseCaseStatement()
+{
+    ParseNode *node = new ParseNode("<case-statement>");
     node->addChild(makeTerminal(expect(CASESY)));
     node->addChild(parseExpression());
     node->addChild(makeTerminal(expect(OFSY)));
@@ -314,21 +723,25 @@ ParseNode* Parser::parseCaseStatement() {
 
 /* PARSE CASE BLOCK
  * case-block → constant (comma + constant)* colon statement (semicolon + case-block?)* */
-ParseNode* Parser::parseCaseBlock() {
-    ParseNode* node = new ParseNode("<case-block>");
+ParseNode *Parser::parseCaseBlock()
+{
+    ParseNode *node = new ParseNode("<case-block>");
     // Satu atau lebih constant dipisah koma
     node->addChild(parseConstant());
-    while (check(COMMA)) {
+    while (check(COMMA))
+    {
         node->addChild(makeTerminal(advance())); // comma
         node->addChild(parseConstant());
     }
     node->addChild(makeTerminal(expect(COL))); // colon
     node->addChild(parseStatement());
     // Semicolon lalu optional case-block lagi (bisa kosong sebelum end)
-    while (check(SEMICOLON)) {
+    while (check(SEMICOLON))
+    {
         node->addChild(makeTerminal(advance())); // semicolon
         // Jika token berikutnya adalah end, case-block kosong — berhenti
-        if (check(ENDSY)) break;
+        if (check(ENDSY))
+            break;
         node->addChild(parseCaseBlock());
     }
     return node;
@@ -336,8 +749,9 @@ ParseNode* Parser::parseCaseBlock() {
 
 /* PARSE WHILE STATEMENT
  * while-statement → whilesy + expression + dosy + statement */
-ParseNode* Parser::parseWhileStatement() {
-    ParseNode* node = new ParseNode("<while-statement>");
+ParseNode *Parser::parseWhileStatement()
+{
+    ParseNode *node = new ParseNode("<while-statement>");
     node->addChild(makeTerminal(expect(WHILESY)));
     node->addChild(parseExpression());
     node->addChild(makeTerminal(expect(DOSY)));
@@ -347,8 +761,9 @@ ParseNode* Parser::parseWhileStatement() {
 
 /* PARSE REPEAT STATEMENT
  * repeat-statement → repeatsy + statement-list + untilsy + expression */
-ParseNode* Parser::parseRepeatStatement() {
-    ParseNode* node = new ParseNode("<repeat-statement>");
+ParseNode *Parser::parseRepeatStatement()
+{
+    ParseNode *node = new ParseNode("<repeat-statement>");
     node->addChild(makeTerminal(expect(REPEATSY)));
     node->addChild(parseStatementList());
     node->addChild(makeTerminal(expect(UNTILSY)));
@@ -358,17 +773,23 @@ ParseNode* Parser::parseRepeatStatement() {
 
 /* PARSE FOR STATEMENT
  * for-statement → forsy + ident + becomes + expression + (tosy | downtosy) + expression + dosy + statement */
-ParseNode* Parser::parseForStatement() {
-    ParseNode* node = new ParseNode("<for-statement>");
+ParseNode *Parser::parseForStatement()
+{
+    ParseNode *node = new ParseNode("<for-statement>");
     node->addChild(makeTerminal(expect(FORSY)));
     node->addChild(makeTerminal(expect(IDENT)));
     node->addChild(makeTerminal(expect(BECOMES)));
     node->addChild(parseExpression());
-    if (check(TOSY)) {
+    if (check(TOSY))
+    {
         node->addChild(makeTerminal(advance())); // tosy
-    } else if (check(DOWNTOSY)) {
+    }
+    else if (check(DOWNTOSY))
+    {
         node->addChild(makeTerminal(advance())); // downtosy
-    } else {
+    }
+    else
+    {
         error("'to' or 'downto' in for-statement");
     }
     node->addChild(parseExpression());
@@ -379,10 +800,12 @@ ParseNode* Parser::parseForStatement() {
 
 /* PARSE EXPRESSION
  * expression → simple-expression (relational-operator + simple-expression)? */
-ParseNode* Parser::parseExpression() {
-    ParseNode* node = new ParseNode("<expression>");
+ParseNode *Parser::parseExpression()
+{
+    ParseNode *node = new ParseNode("<expression>");
     node->addChild(parseSimpleExpression());
-    if (checkAny({EQL, NEQ, GTR, GEQ, LSS, LEQ})) {
+    if (checkAny({EQL, NEQ, GTR, GEQ, LSS, LEQ}))
+    {
         node->addChild(parseRelationalOperator());
         node->addChild(parseSimpleExpression());
     }
@@ -391,12 +814,14 @@ ParseNode* Parser::parseExpression() {
 
 /* PARSE SIMPLE EXPRESSION
  * simple-expression → (plus | minus)? term (additive-operator + term)* */
-ParseNode* Parser::parseSimpleExpression() {
-    ParseNode* node = new ParseNode("<simple-expression>");
+ParseNode *Parser::parseSimpleExpression()
+{
+    ParseNode *node = new ParseNode("<simple-expression>");
     if (check(PLUS) || check(MINUS))
         node->addChild(makeTerminal(advance()));
     node->addChild(parseTerm());
-    while (checkAny({PLUS, MINUS, ORSY})) {
+    while (checkAny({PLUS, MINUS, ORSY}))
+    {
         node->addChild(parseAdditiveOperator());
         node->addChild(parseTerm());
     }
@@ -405,10 +830,12 @@ ParseNode* Parser::parseSimpleExpression() {
 
 /* PARSE TERM
  * term → factor (multiplicative-operator + factor)* */
-ParseNode* Parser::parseTerm() {
-    ParseNode* node = new ParseNode("<term>");
+ParseNode *Parser::parseTerm()
+{
+    ParseNode *node = new ParseNode("<term>");
     node->addChild(parseFactor());
-    while (checkAny({TIMES, RDIV, IDIV, IMOD, ANDSY})) {
+    while (checkAny({TIMES, RDIV, IDIV, IMOD, ANDSY}))
+    {
         node->addChild(parseMultiplicativeOperator());
         node->addChild(parseFactor());
     }
@@ -421,31 +848,50 @@ ParseNode* Parser::parseTerm() {
  *         | (notsy + factor)
  *         | procedure/function-call   (ident + lparent)
  *         | variable                  (ident + component*) */
-ParseNode* Parser::parseFactor() {
-    ParseNode* node = new ParseNode("<factor>");
+ParseNode *Parser::parseFactor()
+{
+    ParseNode *node = new ParseNode("<factor>");
 
-    if (check(INTCON)) {
+    if (check(INTCON))
+    {
         node->addChild(makeTerminal(advance()));
-    } else if (check(REALCON)) {
+    }
+    else if (check(REALCON))
+    {
         node->addChild(makeTerminal(advance()));
-    } else if (check(CHARCON)) {
+    }
+    else if (check(CHARCON))
+    {
         node->addChild(makeTerminal(advance()));
-    } else if (check(STRING)) {
+    }
+    else if (check(STRING))
+    {
         node->addChild(makeTerminal(advance()));
-    } else if (check(LPARENT)) {
+    }
+    else if (check(LPARENT))
+    {
         node->addChild(makeTerminal(advance())); // lparent
         node->addChild(parseExpression());
         node->addChild(makeTerminal(expect(RPARENT)));
-    } else if (check(NOTSY)) {
+    }
+    else if (check(NOTSY))
+    {
         node->addChild(makeTerminal(advance())); // notsy
         node->addChild(parseFactor());
-    } else if (check(IDENT)) {
-        if (peekAt(1).type == LPARENT) {
+    }
+    else if (check(IDENT))
+    {
+        if (peekAt(1).type == LPARENT)
+        {
             node->addChild(parseProcedureFunctionCall());
-        } else {
+        }
+        else
+        {
             node->addChild(parseVariable());
         }
-    } else {
+    }
+    else
+    {
         error("factor (intcon, realcon, charcon, string, ident, '(', or 'not')");
     }
 
@@ -454,8 +900,9 @@ ParseNode* Parser::parseFactor() {
 
 /* PARSE RELATIONAL OPERATOR
  * relational-operator → eql | neq | gtr | geq | lss | leq */
-ParseNode* Parser::parseRelationalOperator() {
-    ParseNode* node = new ParseNode("<relational-operator>");
+ParseNode *Parser::parseRelationalOperator()
+{
+    ParseNode *node = new ParseNode("<relational-operator>");
     if (checkAny({EQL, NEQ, GTR, GEQ, LSS, LEQ}))
         node->addChild(makeTerminal(advance()));
     else
@@ -465,8 +912,9 @@ ParseNode* Parser::parseRelationalOperator() {
 
 /* PARSE ADDITIVE OPERATOR
  * additive-operator → plus | minus | orsy */
-ParseNode* Parser::parseAdditiveOperator() {
-    ParseNode* node = new ParseNode("<additive-operator>");
+ParseNode *Parser::parseAdditiveOperator()
+{
+    ParseNode *node = new ParseNode("<additive-operator>");
     if (checkAny({PLUS, MINUS, ORSY}))
         node->addChild(makeTerminal(advance()));
     else
@@ -476,8 +924,9 @@ ParseNode* Parser::parseAdditiveOperator() {
 
 /* PARSE MULTIPLICATIVE OPERATOR
  * multiplicative-operator → times | rdiv | idiv | imod | andsy */
-ParseNode* Parser::parseMultiplicativeOperator() {
-    ParseNode* node = new ParseNode("<multiplicative-operator>");
+ParseNode *Parser::parseMultiplicativeOperator()
+{
+    ParseNode *node = new ParseNode("<multiplicative-operator>");
     if (checkAny({TIMES, RDIV, IDIV, IMOD, ANDSY}))
         node->addChild(makeTerminal(advance()));
     else
@@ -487,10 +936,12 @@ ParseNode* Parser::parseMultiplicativeOperator() {
 
 /* PARSE VARIABLE
  * variable → ident (component-variable)* */
-ParseNode* Parser::parseVariable() {
-    ParseNode* node = new ParseNode("<variable>");
+ParseNode *Parser::parseVariable()
+{
+    ParseNode *node = new ParseNode("<variable>");
     node->addChild(makeTerminal(expect(IDENT)));
-    while (check(LBRACK) || check(PERIOD)) {
+    while (check(LBRACK) || check(PERIOD))
+    {
         node->addChild(parseComponentVariable());
     }
     return node;
@@ -498,16 +949,22 @@ ParseNode* Parser::parseVariable() {
 
 /* PARSE COMPONENT VARIABLE
  * component-variable → (lbrack + index-list + rbrack) | (period + ident) */
-ParseNode* Parser::parseComponentVariable() {
-    ParseNode* node = new ParseNode("<component-variable>");
-    if (check(LBRACK)) {
+ParseNode *Parser::parseComponentVariable()
+{
+    ParseNode *node = new ParseNode("<component-variable>");
+    if (check(LBRACK))
+    {
         node->addChild(makeTerminal(advance())); // lbrack
         node->addChild(parseIndexList());
         node->addChild(makeTerminal(expect(RBRACK)));
-    } else if (check(PERIOD)) {
+    }
+    else if (check(PERIOD))
+    {
         node->addChild(makeTerminal(advance())); // period
         node->addChild(makeTerminal(expect(IDENT)));
-    } else {
+    }
+    else
+    {
         error("'[' or '.' for component variable");
     }
     return node;
@@ -515,13 +972,15 @@ ParseNode* Parser::parseComponentVariable() {
 
 /* PARSE INDEX LIST
  * index-list → (intcon | charcon | ident) (comma + index-list)* */
-ParseNode* Parser::parseIndexList() {
-    ParseNode* node = new ParseNode("<index-list>");
+ParseNode *Parser::parseIndexList()
+{
+    ParseNode *node = new ParseNode("<index-list>");
     if (checkAny({INTCON, CHARCON, IDENT}))
         node->addChild(makeTerminal(advance()));
     else
         error("index (intcon, charcon, or ident)");
-    while (check(COMMA)) {
+    while (check(COMMA))
+    {
         node->addChild(makeTerminal(advance())); // comma
         node->addChild(parseIndexList());
     }
@@ -530,10 +989,12 @@ ParseNode* Parser::parseIndexList() {
 
 /* PARSE PROCEDURE/FUNCTION CALL
  * procedure/function-call → ident (lparent + parameter-list? + rparent)? */
-ParseNode* Parser::parseProcedureFunctionCall() {
-    ParseNode* node = new ParseNode("<procedure/function-call>");
+ParseNode *Parser::parseProcedureFunctionCall()
+{
+    ParseNode *node = new ParseNode("<procedure/function-call>");
     node->addChild(makeTerminal(expect(IDENT)));
-    if (check(LPARENT)) {
+    if (check(LPARENT))
+    {
         node->addChild(makeTerminal(advance())); // lparent
         if (!check(RPARENT))
             node->addChild(parseParameterList());
@@ -544,10 +1005,12 @@ ParseNode* Parser::parseProcedureFunctionCall() {
 
 /* PARSE PARAMETER LIST
  * parameter-list → expression (comma + expression)* */
-ParseNode* Parser::parseParameterList() {
-    ParseNode* node = new ParseNode("<parameter-list>");
+ParseNode *Parser::parseParameterList()
+{
+    ParseNode *node = new ParseNode("<parameter-list>");
     node->addChild(parseExpression());
-    while (check(COMMA)) {
+    while (check(COMMA))
+    {
         node->addChild(makeTerminal(advance())); // comma
         node->addChild(parseExpression());
     }
