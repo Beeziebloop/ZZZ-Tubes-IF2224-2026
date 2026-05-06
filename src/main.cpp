@@ -26,14 +26,10 @@ int main(int argc, char* argv[]) {
         Lexer lexer(argv[1]);
         std::vector<Token> tokens = lexer.tokenize();
 
-        const bool treeOnlyMode = (argc == 3);
+        /* Tulis token ke terminal */
+        writeTokens(tokens, lexer, std::cout);
 
-        /* Tulis token ke terminal, kecuali saat mode parse tree saja */
-        if (!treeOnlyMode) {
-            writeTokens(tokens, lexer, std::cout);
-        }
-
-        /* Opsional: simpan token ke file */
+        /* Opsional: simpan token ke file (3 args) */
         if (argc >= 4) {
             std::ofstream tokenOut(argv[2]);
             if (!tokenOut.is_open()) {
@@ -46,11 +42,16 @@ int main(int argc, char* argv[]) {
         }
 
         /* ── Milestone 2: Syntax Analysis ── */
+        std::cout << "\n--- PARSE TREE ---\n";
+
         Parser parser(tokens);
         ParseNode* tree = parser.parse();
 
-        /* Mode parse tree saja: tulis langsung ke file output */
-        if (treeOnlyMode) {
+        /* Cetak parse tree ke terminal */
+        parser.printTree(tree, std::cout);
+
+        /* Mode 2 args: tulis parse tree ke file output */
+        if (argc == 3) {
             std::ofstream treeOut(argv[2]);
             if (!treeOut.is_open()) {
                 std::cerr << "Error: Tidak bisa membuka file output parse tree: "
@@ -59,24 +60,18 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
             parser.printTree(tree, treeOut);
-        } else {
-            std::cout << "\n--- PARSE TREE ---\n";
-
-            /* Cetak parse tree ke terminal */
-            parser.printTree(tree, std::cout);
-
-            /* Opsional: simpan parse tree ke file */
-            if (argc >= 4) {
-                std::ofstream treeOut(argv[3]);
-                if (!treeOut.is_open()) {
-                    std::cerr << "Error: Tidak bisa membuka file output parse tree: "
-                              << argv[3] << std::endl;
-                    delete tree;
-                    return 1;
-                }
-                parser.printTree(tree, treeOut);
-                std::cerr << "Parse tree output ditulis ke: " << argv[3] << std::endl;
+        }
+        /* Mode 3 args: tulis parse tree ke file output */
+        else if (argc >= 4) {
+            std::ofstream treeOut(argv[3]);
+            if (!treeOut.is_open()) {
+                std::cerr << "Error: Tidak bisa membuka file output parse tree: "
+                          << argv[3] << std::endl;
+                delete tree;
+                return 1;
             }
+            parser.printTree(tree, treeOut);
+            std::cerr << "Parse tree output ditulis ke: " << argv[3] << std::endl;
         }
 
         delete tree;
