@@ -8,7 +8,7 @@ BIN_DIR  = bin
 
 # File source
 SRCS     = $(SRC_DIR)/main.cpp $(SRC_DIR)/lex_analyzer.cpp $(SRC_DIR)/parser.cpp
-TARGET   = $(BIN_DIR)/lexer
+TARGET   = $(BIN_DIR)/lexer.exe
 
 # Default target
 all: $(BIN_DIR) $(TARGET)
