@@ -27,9 +27,9 @@ run: all
 runout: all
 	./$(TARGET) $(INPUT) $(OUTPUT)
 
-# Run dengan token + parse tree output: make runparse INPUT=... TOKOUT=... TREEOUT=...
+# Run dengan parse tree output saja: make runparse INPUT=... TREEOUT=...
 runparse: all
-	./$(TARGET) $(INPUT) $(TOKOUT) $(TREEOUT)
+	./$(TARGET) $(INPUT) $(TREEOUT)
 
 # Shortcut test milestone 1
 test1: all
@@ -39,7 +39,7 @@ test1: all
 # Shortcut test milestone 2
 test2: all
 	mkdir -p test/milestone-2
-	./$(TARGET) test/milestone-2/input-1.txt test/milestone-2/token-1.txt test/milestone-2/output-1.txt
+	./$(TARGET) test/milestone-2/input-1.txt test/milestone-2/output-1.txt
 
 # Bersihkan hasil kompilasi
 clean:
