@@ -174,7 +174,26 @@ ParseNode* Parser::parseProgram() {}
 ParseNode* Parser::parseProgramHeader() {}
 ParseNode* Parser::parseDeclarationPart() {}
 ParseNode* Parser::parseConstDeclaration() {}
-ParseNode* Parser::parseConstant() {}
+/* PARSE CONSTANT
+ * constant → charcon | string | [(plus | minus)? + (ident | intcon | realcon)]
+ * Diimplementasikan di sini karena dibutuhkan oleh parseCaseBlock (job 2). */
+ParseNode* Parser::parseConstant() {
+    ParseNode* node = new ParseNode("<constant>");
+    if (check(CHARCON)) {
+        node->addChild(makeTerminal(advance()));
+    } else if (check(STRING)) {
+        node->addChild(makeTerminal(advance()));
+    } else {
+        // Optional sign
+        if (check(PLUS) || check(MINUS))
+            node->addChild(makeTerminal(advance()));
+        if (checkAny({IDENT, INTCON, REALCON}))
+            node->addChild(makeTerminal(advance()));
+        else
+            error("constant (charcon, string, ident, intcon, or realcon)");
+    }
+    return node;
+}
 ParseNode* Parser::parseTypeDeclaration() {}
 ParseNode* Parser::parseType() {}
 ParseNode* Parser::parseArrayType() {}
@@ -194,16 +213,169 @@ ParseNode* Parser::parseBlock() {}
 
 /* job 2: Statements */
 
-ParseNode* Parser::parseCompoundStatement() {}
-ParseNode* Parser::parseStatementList() {}
-ParseNode* Parser::parseStatement() {}
-ParseNode* Parser::parseAssignmentStatement() {}
-ParseNode* Parser::parseIfStatement() {}
-ParseNode* Parser::parseCaseStatement() {}
-ParseNode* Parser::parseCaseBlock() {}
-ParseNode* Parser::parseWhileStatement() {}
-ParseNode* Parser::parseRepeatStatement() {}
-ParseNode* Parser::parseForStatement() {}
+/* PARSE COMPOUND STATEMENT
+ * compound-statement → beginsy + statement-list + endsy */
+ParseNode* Parser::parseCompoundStatement() {
+    ParseNode* node = new ParseNode("<compound-statement>");
+    node->addChild(makeTerminal(expect(BEGINSY)));
+    node->addChild(parseStatementList());
+    node->addChild(makeTerminal(expect(ENDSY)));
+    return node;
+}
+
+/* PARSE STATEMENT LIST
+ * statement-list → statement (semicolon + statement)* */
+ParseNode* Parser::parseStatementList() {
+    ParseNode* node = new ParseNode("<statement-list>");
+    node->addChild(parseStatement());
+    while (check(SEMICOLON)) {
+        node->addChild(makeTerminal(advance())); // semicolon
+        node->addChild(parseStatement());
+    }
+    return node;
+}
+
+/* PARSE STATEMENT
+ * ident diikuti becomes ->  assignment,
+ * ident diikuti lparent (atau langsung ke statement lain) ->  proc/func-call,
+ * ident berdiri sendiri (variable access) -> assignment (setelah component-variable.) */
+ParseNode* Parser::parseStatement() {
+    ParseNode* node = new ParseNode("<statement>");
+
+    if (check(BEGINSY)) {
+        node->addChild(parseCompoundStatement());
+    } else if (check(IFSY)) {
+        node->addChild(parseIfStatement());
+    } else if (check(CASESY)) {
+        node->addChild(parseCaseStatement());
+    } else if (check(WHILESY)) {
+        node->addChild(parseWhileStatement());
+    } else if (check(REPEATSY)) {
+        node->addChild(parseRepeatStatement());
+    } else if (check(FORSY)) {
+        node->addChild(parseForStatement());
+    } else if (check(IDENT)) {
+        /* Perlu lookahead untuk membedakan assignment vs proc/func-call.
+         * Procedure/function-call: ident langsung diikuti lparent.
+         * Assignment: ident (component-variable)* becomes.
+         * Untuk menentukan, scan ke depan melewati component-variable. */
+        if (peekAt(1).type == LPARENT) {
+            // ident( ... ) → procedure/function-call sebagai statement
+            node->addChild(parseProcedureFunctionCall());
+        } else {
+            /* Coba parse sebagai assignment. Jika setelah ident ada
+             * '[' atau '.' maka ini variable dengan component, lalu harus
+             * diikuti becomes. Jika ident langsung diikuti becomes → assignment.
+             * Keduanya di-handle oleh parseAssignmentStatement(). */
+            node->addChild(parseAssignmentStatement());
+        }
+    }
+    // Statement boleh kosong (empty statement) — node tanpa anak valid.
+
+    return node;
+}
+
+/* PARSE ASSIGNMENT STATEMENT
+ * assignment-statement → variable + becomes + expression */
+ParseNode* Parser::parseAssignmentStatement() {
+    ParseNode* node = new ParseNode("<assignment-statement>");
+    node->addChild(parseVariable());
+    node->addChild(makeTerminal(expect(BECOMES)));
+    node->addChild(parseExpression());
+    return node;
+}
+
+/* PARSE IF STATEMENT
+ * if-statement → ifsy + expression + thensy + statement (elsesy + statement)? */
+ParseNode* Parser::parseIfStatement() {
+    ParseNode* node = new ParseNode("<if-statement>");
+    node->addChild(makeTerminal(expect(IFSY)));
+    node->addChild(parseExpression());
+    node->addChild(makeTerminal(expect(THENSY)));
+    node->addChild(parseStatement());
+    if (check(ELSESY)) {
+        node->addChild(makeTerminal(advance())); // elsesy
+        node->addChild(parseStatement());
+    }
+    return node;
+}
+
+/* PARSE CASE STATEMENT
+ * case-statement → casesy + expression + ofsy + case-block + endsy */
+ParseNode* Parser::parseCaseStatement() {
+    ParseNode* node = new ParseNode("<case-statement>");
+    node->addChild(makeTerminal(expect(CASESY)));
+    node->addChild(parseExpression());
+    node->addChild(makeTerminal(expect(OFSY)));
+    node->addChild(parseCaseBlock());
+    node->addChild(makeTerminal(expect(ENDSY)));
+    return node;
+}
+
+/* PARSE CASE BLOCK
+ * case-block → constant (comma + constant)* colon statement (semicolon + case-block?)* */
+ParseNode* Parser::parseCaseBlock() {
+    ParseNode* node = new ParseNode("<case-block>");
+    // Satu atau lebih constant dipisah koma
+    node->addChild(parseConstant());
+    while (check(COMMA)) {
+        node->addChild(makeTerminal(advance())); // comma
+        node->addChild(parseConstant());
+    }
+    node->addChild(makeTerminal(expect(COL))); // colon
+    node->addChild(parseStatement());
+    // Semicolon lalu optional case-block lagi (bisa kosong sebelum end)
+    while (check(SEMICOLON)) {
+        node->addChild(makeTerminal(advance())); // semicolon
+        // Jika token berikutnya adalah end, case-block kosong — berhenti
+        if (check(ENDSY)) break;
+        node->addChild(parseCaseBlock());
+    }
+    return node;
+}
+
+/* PARSE WHILE STATEMENT
+ * while-statement → whilesy + expression + dosy + statement */
+ParseNode* Parser::parseWhileStatement() {
+    ParseNode* node = new ParseNode("<while-statement>");
+    node->addChild(makeTerminal(expect(WHILESY)));
+    node->addChild(parseExpression());
+    node->addChild(makeTerminal(expect(DOSY)));
+    node->addChild(parseStatement());
+    return node;
+}
+
+/* PARSE REPEAT STATEMENT
+ * repeat-statement → repeatsy + statement-list + untilsy + expression */
+ParseNode* Parser::parseRepeatStatement() {
+    ParseNode* node = new ParseNode("<repeat-statement>");
+    node->addChild(makeTerminal(expect(REPEATSY)));
+    node->addChild(parseStatementList());
+    node->addChild(makeTerminal(expect(UNTILSY)));
+    node->addChild(parseExpression());
+    return node;
+}
+
+/* PARSE FOR STATEMENT
+ * for-statement → forsy + ident + becomes + expression + (tosy | downtosy) + expression + dosy + statement */
+ParseNode* Parser::parseForStatement() {
+    ParseNode* node = new ParseNode("<for-statement>");
+    node->addChild(makeTerminal(expect(FORSY)));
+    node->addChild(makeTerminal(expect(IDENT)));
+    node->addChild(makeTerminal(expect(BECOMES)));
+    node->addChild(parseExpression());
+    if (check(TOSY)) {
+        node->addChild(makeTerminal(advance())); // tosy
+    } else if (check(DOWNTOSY)) {
+        node->addChild(makeTerminal(advance())); // downtosy
+    } else {
+        error("'to' or 'downto' in for-statement");
+    }
+    node->addChild(parseExpression());
+    node->addChild(makeTerminal(expect(DOSY)));
+    node->addChild(parseStatement());
+    return node;
+}
 
 /* PARSE EXPRESSION
  * expression → simple-expression (relational-operator + simple-expression)? */
