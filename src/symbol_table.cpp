@@ -32,20 +32,27 @@ void SymbolTable::initPredefined()
                        0});
     }
 
+    // Helper lambda: push entry dan update btab[0].last + link
+    auto addPredefined = [&](TabEntry e) {
+        e.link = btab[0].last;
+        tab.push_back(e);
+        btab[0].last = static_cast<int>(tab.size()) - 1;
+    };
+
     // Predefined types
-    tab.push_back({"integer", 0, OBJ_TYPE, TYPE_INTEGER, 0, 1, 0, 0});
-    tab.push_back({"real", 0, OBJ_TYPE, TYPE_REAL, 0, 1, 0, 0});
-    tab.push_back({"char", 0, OBJ_TYPE, TYPE_CHAR, 0, 1, 0, 0});
-    tab.push_back({"boolean", 0, OBJ_TYPE, TYPE_BOOLEAN, 0, 1, 0, 0});
-    tab.push_back({"string", 0, OBJ_TYPE, TYPE_STRING, 0, 1, 0, 0});
+    addPredefined({"integer", 0, OBJ_TYPE, TYPE_INTEGER, 0, 1, 0, 0});
+    addPredefined({"real",    0, OBJ_TYPE, TYPE_REAL,    0, 1, 0, 0});
+    addPredefined({"char",    0, OBJ_TYPE, TYPE_CHAR,    0, 1, 0, 0});
+    addPredefined({"boolean", 0, OBJ_TYPE, TYPE_BOOLEAN, 0, 1, 0, 0});
+    addPredefined({"string",  0, OBJ_TYPE, TYPE_STRING,  0, 1, 0, 0});
 
     // Boolean constants
-    tab.push_back({"true", 0, OBJ_CONSTANT, TYPE_BOOLEAN, 0, 1, 0, 1});
-    tab.push_back({"false", 0, OBJ_CONSTANT, TYPE_BOOLEAN, 0, 1, 0, 0});
+    addPredefined({"true",  0, OBJ_CONSTANT, TYPE_BOOLEAN, 0, 1, 0, 1});
+    addPredefined({"false", 0, OBJ_CONSTANT, TYPE_BOOLEAN, 0, 1, 0, 0});
 
     // Predefined procedures
-    tab.push_back({"writeln", 0, OBJ_PROCEDURE, TYPE_NONE, 0, 1, 0, 0});
-    tab.push_back({"readln", 0, OBJ_PROCEDURE, TYPE_NONE, 0, 1, 0, 0});
+    addPredefined({"writeln", 0, OBJ_PROCEDURE, TYPE_NONE, 0, 1, 0, 0});
+    addPredefined({"readln",  0, OBJ_PROCEDURE, TYPE_NONE, 0, 1, 0, 0});
 }
 
 int SymbolTable::enter(const string &name,
@@ -116,15 +123,6 @@ int SymbolTable::lookup(const string &name) const
             }
 
             idx = tab[idx].link;
-        }
-    }
-
-    // fallback untuk predefined identifiers
-    for (size_t i = 0; i < tab.size(); i++)
-    {
-        if (tab[i].identifier == name)
-        {
-            return static_cast<int>(i);
         }
     }
 

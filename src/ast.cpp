@@ -195,7 +195,10 @@ VarNode::VarNode(std::string name, SourceLoc loc) : ASTNode(ASTKind::Var, loc), 
 
 void VarNode::print(std::ostream& os, int indent) const {
     pad(os, indent);
-    os << "Var('" << name << "')\n";
+    os << "Var('" << name << "'";
+    if (!inferredType.empty()) os << " : " << inferredType;
+    if (tabIndex >= 0) os << " [tab=" << tabIndex << ", lev=" << lexicalLevel << "]";
+    os << ")\n";
 }
 
 ArrayAccessNode::ArrayAccessNode(ASTPtr base, std::vector<ASTPtr> indices, SourceLoc loc) : ASTNode(ASTKind::ArrayAccess, loc), base(std::move(base)), indices(std::move(indices)) {}
@@ -223,35 +226,47 @@ NumNode::NumNode(std::string rawValue, bool isReal, SourceLoc loc) : ASTNode(AST
 
 void NumNode::print(std::ostream& os, int indent) const {
     pad(os, indent);
-    os << (isReal ? "Real" : "Integer") << "Number(" << rawValue << ")\n";
+    os << (isReal ? "Real" : "Integer") << "Number(" << rawValue;
+    if (!inferredType.empty()) os << " : " << inferredType;
+    os << ")\n";
 }
 
 StringNode::StringNode(std::string value, SourceLoc loc) : ASTNode(ASTKind::String, loc), value(std::move(value)) {}
 
 void StringNode::print(std::ostream& os, int indent) const {
     pad(os, indent);
-    os << "String('" << value << "')\n";
+    os << "String('" << value;
+    if (!inferredType.empty()) os << "' : " << inferredType;
+    else os << "'";
+    os << ")\n";
 }
 
 CharNode::CharNode(std::string value, SourceLoc loc) : ASTNode(ASTKind::Char, loc), value(std::move(value)) {}
 
 void CharNode::print(std::ostream& os, int indent) const {
     pad(os, indent);
-    os << "Char('" << value << "')\n";
+    os << "Char('" << value;
+    if (!inferredType.empty()) os << "' : " << inferredType;
+    else os << "'";
+    os << ")\n";
 }
 
 BooleanNode::BooleanNode(bool value, SourceLoc loc) : ASTNode(ASTKind::Boolean, loc), value(value) {}
 
 void BooleanNode::print(std::ostream& os, int indent) const {
     pad(os, indent);
-    os << "Boolean(" << (value ? "true" : "false") << ")\n";
+    os << "Boolean(" << (value ? "true" : "false");
+    if (!inferredType.empty()) os << " : " << inferredType;
+    os << ")\n";
 }
 
 BinOpNode::BinOpNode(std::string op, ASTPtr left, ASTPtr right, SourceLoc loc) : ASTNode(ASTKind::BinOp, loc), op(std::move(op)), left(std::move(left)), right(std::move(right)) {}
 
 void BinOpNode::print(std::ostream& os, int indent) const {
     pad(os, indent);
-    os << "BinOp('" << op << "')\n";
+    os << "BinOp('" << op << "'";
+    if (!inferredType.empty()) os << " : " << inferredType;
+    os << ")\n";
     if (left) left->print(os, indent + 2);
     if (right) right->print(os, indent + 2);
 }
@@ -260,7 +275,9 @@ UnaryOpNode::UnaryOpNode(std::string op, ASTPtr operand, SourceLoc loc) : ASTNod
 
 void UnaryOpNode::print(std::ostream& os, int indent) const {
     pad(os, indent);
-    os << "UnaryOp('" << op << "')\n";
+    os << "UnaryOp('" << op << "'";
+    if (!inferredType.empty()) os << " : " << inferredType;
+    os << ")\n";
     if (operand) operand->print(os, indent + 2);
 }
 

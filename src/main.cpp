@@ -1,6 +1,7 @@
 #include "lex_analyzer.hpp"
 #include "parser.hpp"
 #include "ast_builder.hpp"
+#include "semantic_analyzer.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -28,7 +29,7 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        /* ── Milestone 1: Lexical Analysis ── */
+        /* Lexical Analysis */
         Lexer lexer(argv[1]);
         std::vector<Token> tokens = lexer.tokenize();
 
@@ -57,7 +58,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Token output ditulis ke: " << argv[2] << std::endl;
         }
 
-        /* ── Milestone 2: Syntax Analysis ── */
+        /* Syntax Analysis  */
         std::cout << "\n--- PARSE TREE ---\n";
 
         Parser parser(tokens);
@@ -92,7 +93,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Parse tree output ditulis ke: " << argv[3] << std::endl;
         }
 
-        /* ── Milestone 3: AST Construction / Syntax-Directed Translation ── */
+        /* AST Construction / Syntax-Directed Translation  */
         std::cout << "\n--- ABSTRACT SYNTAX TREE ---\n";
 
         ASTBuilder astBuilder;
@@ -103,6 +104,22 @@ int main(int argc, char* argv[]) {
         } else {
             std::cerr << "Warning: AST tidak berhasil dibentuk.\n";
         }
+
+        /* Semantic Analysis (Decorated AST + Symbol Tables)  */
+        std::cout << "\n--- DECORATED AST ---\n";
+
+        SemanticAnalyzer semanalyzer;
+        ASTPtr decoratedAst = semanalyzer.analyze(tree.get());
+
+        if (decoratedAst) {
+            decoratedAst->print(std::cout);
+        } else {
+            std::cerr << "Warning: Decorated AST tidak berhasil dibentuk.\n";
+        }
+
+        semanalyzer.symtab.printTab();
+        semanalyzer.symtab.printBtab();
+        semanalyzer.symtab.printAtab();
 
     } catch (const ParseError& e) {
         std::cerr << e.what() << std::endl;

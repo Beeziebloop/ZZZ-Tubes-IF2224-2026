@@ -7,7 +7,9 @@ SRC_DIR  = src
 BIN_DIR  = bin
 
 # File source
-SRCS     = $(SRC_DIR)/main.cpp $(SRC_DIR)/lex_analyzer.cpp $(SRC_DIR)/parser.cpp
+SRCS     = $(SRC_DIR)/main.cpp $(SRC_DIR)/lex_analyzer.cpp $(SRC_DIR)/parser.cpp \
+           $(SRC_DIR)/ast.cpp $(SRC_DIR)/ast_builder.cpp \
+           $(SRC_DIR)/symbol_table.cpp $(SRC_DIR)/semantic_analyzer.cpp
 TARGET   = $(BIN_DIR)/lexer.exe
 
 # Default target

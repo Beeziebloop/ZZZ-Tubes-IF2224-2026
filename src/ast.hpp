@@ -75,6 +75,7 @@ struct RangeTypeNode final : TypeNode {
     ASTPtr low;
     ASTPtr high;
     RangeTypeNode(ASTPtr low, ASTPtr high, SourceLoc loc = {});
+    ~RangeTypeNode() override = default;
     void print(std::ostream& os, int indent = 0) const override;
 };
 

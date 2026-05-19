@@ -172,18 +172,8 @@ string SemanticAnalyzer::operatorFromNode(ParseNode *node) const
             return "-";
         if (name == "times")
             return "*";
-        if (name == "rmotion")
-            return "/";
-        if (name == "rmotion")
-            ;
-        if (name == "rmotion")
-            ;
         if (name == "rdiv")
             return "/";
-        if (name == "idiv")
-            return "motion";
-        if (name == "idiv")
-            return "motion";
         if (name == "idiv")
             return "div";
         if (name == "imod")
@@ -429,6 +419,28 @@ void SemanticAnalyzer::semanticError(const string &msg, int line)
     if (line != -1)
         cerr << " at line " << line;
     cerr << ": " << msg << endl;
+}
+
+string SemanticAnalyzer::typeCodeToString(TypeCode t)
+{
+    switch (t)
+    {
+    case TYPE_INTEGER:  return "integer";
+    case TYPE_REAL:     return "real";
+    case TYPE_CHAR:     return "char";
+    case TYPE_BOOLEAN:  return "boolean";
+    case TYPE_STRING:   return "string";
+    case TYPE_ARRAY:    return "array";
+    case TYPE_RECORD:   return "record";
+    case TYPE_SUBRANGE: return "subrange";
+    default:            return "";
+    }
+}
+
+void SemanticAnalyzer::setType(ASTNode *node, TypeCode t)
+{
+    if (node)
+        node->inferredType = typeCodeToString(t);
 }
 
 // Program structure
@@ -798,7 +810,9 @@ ASTPtr SemanticAnalyzer::visitConstant(ParseNode *node)
         string value = terminalValue(intcon);
         if (negative)
             value = "-" + value;
-        return make_unique<NumNode>(value, false);
+        auto n = make_unique<NumNode>(value, false);
+        setType(n.get(), TYPE_INTEGER);
+        return n;
     }
 
     if (ParseNode *realcon = firstTerminal(node, "realcon"))
@@ -806,14 +820,24 @@ ASTPtr SemanticAnalyzer::visitConstant(ParseNode *node)
         string value = terminalValue(realcon);
         if (negative)
             value = "-" + value;
-        return make_unique<NumNode>(value, true);
+        auto n = make_unique<NumNode>(value, true);
+        setType(n.get(), TYPE_REAL);
+        return n;
     }
 
     if (ParseNode *charcon = firstTerminal(node, "charcon"))
-        return make_unique<CharNode>(terminalValue(charcon));
+    {
+        auto n = make_unique<CharNode>(terminalValue(charcon));
+        setType(n.get(), TYPE_CHAR);
+        return n;
+    }
 
     if (ParseNode *str = firstTerminal(node, "string"))
-        return make_unique<StringNode>(terminalValue(str));
+    {
+        auto n = make_unique<StringNode>(terminalValue(str));
+        setType(n.get(), TYPE_STRING);
+        return n;
+    }
 
     if (ParseNode *ident = firstTerminal(node, "ident"))
     {
@@ -821,15 +845,30 @@ ASTPtr SemanticAnalyzer::visitConstant(ParseNode *node)
         string lname = lower(name);
 
         if (lname == "true")
-            return make_unique<BooleanNode>(true);
+        {
+            auto n = make_unique<BooleanNode>(true);
+            setType(n.get(), TYPE_BOOLEAN);
+            return n;
+        }
         if (lname == "false")
-            return make_unique<BooleanNode>(false);
+        {
+            auto n = make_unique<BooleanNode>(false);
+            setType(n.get(), TYPE_BOOLEAN);
+            return n;
+        }
 
         auto var = make_unique<VarNode>(name);
         lookupSymbol(name);
         decorateVar(var.get(), name);
+        int idx = symtab.lookup(name);
+        if (idx >= 0)
+            setType(var.get(), symtab.tab[idx].type);
         if (negative)
-            return make_unique<UnaryOpNode>("-", move(var));
+        {
+            auto u = make_unique<UnaryOpNode>("-", move(var));
+            setType(u.get(), symtab.tab[idx >= 0 ? idx : 0].type);
+            return u;
+        }
         return var;
     }
 
@@ -1045,7 +1084,9 @@ ASTPtr SemanticAnalyzer::visitExpression(ParseNode *node)
         if (leftT != TYPE_NONE && rightT != TYPE_NONE && !isCompatible(leftT, rightT))
             semanticError("incompatible types in relational expression");
 
-        result = make_unique<BinOpNode>(op, move(result), move(right));
+        auto binop = make_unique<BinOpNode>(op, move(result), move(right));
+        setType(binop.get(), TYPE_BOOLEAN);
+        result = move(binop);
     }
 
     return result;
@@ -1064,7 +1105,12 @@ ASTPtr SemanticAnalyzer::visitSimpleExpr(ParseNode *node)
 
     bool hasUnaryMinus = !node->children.empty() && terminalName(node->children[0]) == "minus";
     if (hasUnaryMinus)
-        result = make_unique<UnaryOpNode>("-", move(result));
+    {
+        TypeCode t = getTypeFromAST(result.get());
+        auto u = make_unique<UnaryOpNode>("-", move(result));
+        setType(u.get(), t);
+        result = move(u);
+    }
 
     size_t termIndex = 1;
     for (ParseNode *ch : node->children)
@@ -1083,7 +1129,10 @@ ASTPtr SemanticAnalyzer::visitSimpleExpr(ParseNode *node)
                     semanticError("incompatible types in additive expression");
             }
 
-            result = make_unique<BinOpNode>(op, move(result), move(right));
+            TypeCode resT = resultTypeOfBinOp(op, leftT, rightT);
+            auto binop = make_unique<BinOpNode>(op, move(result), move(right));
+            setType(binop.get(), resT);
+            result = move(binop);
         }
     }
 
@@ -1115,7 +1164,10 @@ ASTPtr SemanticAnalyzer::visitTerm(ParseNode *node)
             if (leftT != TYPE_NONE && rightT != TYPE_NONE && !isCompatible(leftT, rightT))
                 semanticError("incompatible types in multiplicative expression");
 
-            result = make_unique<BinOpNode>(op, move(result), move(right));
+            TypeCode resT = resultTypeOfBinOp(op, leftT, rightT);
+            auto binop = make_unique<BinOpNode>(op, move(result), move(right));
+            setType(binop.get(), resT);
+            result = move(binop);
         }
     }
 
@@ -1128,16 +1180,32 @@ ASTPtr SemanticAnalyzer::visitFactor(ParseNode *node)
         return nullptr;
 
     if (ParseNode *intcon = firstTerminal(node, "intcon"))
-        return make_unique<NumNode>(terminalValue(intcon), false);
+    {
+        auto n = make_unique<NumNode>(terminalValue(intcon), false);
+        setType(n.get(), TYPE_INTEGER);
+        return n;
+    }
 
     if (ParseNode *realcon = firstTerminal(node, "realcon"))
-        return make_unique<NumNode>(terminalValue(realcon), true);
+    {
+        auto n = make_unique<NumNode>(terminalValue(realcon), true);
+        setType(n.get(), TYPE_REAL);
+        return n;
+    }
 
     if (ParseNode *charcon = firstTerminal(node, "charcon"))
-        return make_unique<CharNode>(terminalValue(charcon));
+    {
+        auto n = make_unique<CharNode>(terminalValue(charcon));
+        setType(n.get(), TYPE_CHAR);
+        return n;
+    }
 
     if (ParseNode *str = firstTerminal(node, "string"))
-        return make_unique<StringNode>(terminalValue(str));
+    {
+        auto n = make_unique<StringNode>(terminalValue(str));
+        setType(n.get(), TYPE_STRING);
+        return n;
+    }
 
     if (containsTerminal(node, "notsy"))
     {
@@ -1147,7 +1215,9 @@ ASTPtr SemanticAnalyzer::visitFactor(ParseNode *node)
             {
                 ASTPtr operand = visitFactor(ch);
                 checkConditionType(getTypeFromAST(operand.get()), "not");
-                return make_unique<UnaryOpNode>("not", move(operand));
+                auto u = make_unique<UnaryOpNode>("not", move(operand));
+                setType(u.get(), TYPE_BOOLEAN);
+                return u;
             }
         }
     }
@@ -1174,9 +1244,13 @@ ASTPtr SemanticAnalyzer::visitVariable(ParseNode *node)
 
     lookupSymbol(name);
 
-    ASTPtr result = make_unique<VarNode>(name);
-    decorateVar(result.get(), name);
+    auto varNode = make_unique<VarNode>(name);
+    decorateVar(varNode.get(), name);
+    int idx = symtab.lookup(name);
+    if (idx >= 0)
+        setType(varNode.get(), symtab.tab[idx].type);
 
+    ASTPtr result = move(varNode);
     for (ParseNode *ch : node->children)
     {
         if (ch->label == "<component-variable>")

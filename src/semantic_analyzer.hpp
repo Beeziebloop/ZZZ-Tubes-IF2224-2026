@@ -101,6 +101,8 @@ private:
     void checkConditionType(TypeCode type, const std::string &context, int line = -1);
 
     void semanticError(const std::string &msg, int line = -1);
+    static std::string typeCodeToString(TypeCode t);
+    void setType(ASTNode *node, TypeCode t);
 };
 
 #endif
