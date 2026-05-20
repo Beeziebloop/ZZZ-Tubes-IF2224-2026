@@ -359,6 +359,16 @@ bool SemanticAnalyzer::isCompatible(TypeCode t1, TypeCode t2)
     return false;
 }
 
+bool SemanticAnalyzer::isRelationalCompatible(TypeCode t1, TypeCode t2)
+{
+    if (t1 == t2)
+        return true;
+    // integer dan real boleh dibandingkan satu sama lain
+    if ((t1 == TYPE_INTEGER || t1 == TYPE_REAL) && (t2 == TYPE_INTEGER || t2 == TYPE_REAL))
+        return true;
+    return false;
+}
+
 bool SemanticAnalyzer::isAssignCompatible(TypeCode target, TypeCode value)
 {
     if (target == value)
@@ -372,7 +382,13 @@ TypeCode SemanticAnalyzer::resultTypeOfBinOp(const string &op,
                                              TypeCode left,
                                              TypeCode right)
 {
-    if (op == "+" || op == "-" || op == "*" || op == "/" || op == "div" || op == "mod")
+    if (op == "/")
+        return TYPE_REAL;
+
+    if (op == "div" || op == "mod")
+        return TYPE_INTEGER;
+
+    if (op == "+" || op == "-" || op == "*")
     {
         if (left == TYPE_REAL || right == TYPE_REAL)
             return TYPE_REAL;
@@ -543,7 +559,12 @@ vector<ASTPtr> SemanticAnalyzer::visitTypeDecl(ParseNode *node)
         string name = terminalValue(ident);
         TypeCode typeCode = resolveType(typeParse);
 
-        enterTypeAlias(name, typeCode);
+        int arrayRef = 0;
+        if (typeCode == TYPE_ARRAY)
+            arrayRef = registerArrayType(typeParse);
+
+        int idx = symtab.enter(name, OBJ_TYPE, typeCode, arrayRef, 1, 0);
+        (void)idx;
         result.push_back(make_unique<TypeDeclNode>(
             name,
             createTypeNode(typeParse)));
@@ -568,9 +589,13 @@ vector<ASTPtr> SemanticAnalyzer::visitVarDecl(ParseNode *node)
         TypeCode typeCode = resolveType(typeParse);
         ASTPtr typeAst = createTypeNode(typeParse);
 
+        int arrayRef = 0;
+        if (typeCode == TYPE_ARRAY)
+            arrayRef = registerArrayType(typeParse);
+
         for (const string &name : identifierList(idList))
         {
-            enterVariable(name, typeCode);
+            symtab.enter(name, OBJ_VARIABLE, typeCode, arrayRef, 1, 0);
             result.push_back(make_unique<VarDeclNode>(
                 name,
                 copyTypeNode(typeAst.get())));
@@ -607,6 +632,10 @@ ASTPtr SemanticAnalyzer::visitProcDecl(ParseNode *node)
     if (ParseNode *formal = child(node, "<formal_params>"))
         params = visitFormalParams(formal);
 
+    vector<ASTPtr> localDecls;
+    if (ParseNode *declPart = child(node, "<declaration_part>"))
+        localDecls = visitDeclarationPart(declPart);
+
     ASTPtr blockNode = make_unique<BlockNode>(vector<ASTPtr>{});
     if (ParseNode *blockParse = child(node, "<block>"))
         blockNode = visitBlock(blockParse);
@@ -616,7 +645,7 @@ ASTPtr SemanticAnalyzer::visitProcDecl(ParseNode *node)
     return make_unique<ProcedureDeclNode>(
         name,
         move(params),
-        vector<ASTPtr>{},
+        move(localDecls),
         move(blockNode));
 }
 
@@ -644,6 +673,10 @@ ASTPtr SemanticAnalyzer::visitFuncDecl(ParseNode *node)
     if (ParseNode *formal = child(node, "<formal_params>"))
         params = visitFormalParams(formal);
 
+    vector<ASTPtr> localDecls;
+    if (ParseNode *declPart = child(node, "<declaration_part>"))
+        localDecls = visitDeclarationPart(declPart);
+
     ASTPtr returnType = createTypeNode(returnTypeParse);
     ASTPtr blockNode = make_unique<BlockNode>(vector<ASTPtr>{});
     if (ParseNode *blockParse = child(node, "<block>"))
@@ -655,7 +688,7 @@ ASTPtr SemanticAnalyzer::visitFuncDecl(ParseNode *node)
         name,
         move(params),
         move(returnType),
-        vector<ASTPtr>{},
+        move(localDecls),
         move(blockNode));
 }
 
@@ -680,6 +713,7 @@ vector<ASTPtr> SemanticAnalyzer::visitParamGroup(ParseNode *node)
 {
     vector<ASTPtr> result;
 
+    bool byRef = containsTerminal(node, "varsy");
     ParseNode *idList = child(node, "<identifier_list>");
     ParseNode *typeParse = child(node, "<type>");
     TypeCode typeCode = resolveType(typeParse);
@@ -687,11 +721,12 @@ vector<ASTPtr> SemanticAnalyzer::visitParamGroup(ParseNode *node)
 
     for (const string &paramName : identifierList(idList))
     {
-        enterVariable(paramName, typeCode);
+        // nrm=1 normal value param, nrm=0 var (by-reference) param
+        symtab.enter(paramName, OBJ_VARIABLE, typeCode, 0, byRef ? 0 : 1, 0);
         result.push_back(make_unique<ParamDeclNode>(
             paramName,
             copyTypeNode(typeAst.get()),
-            false));
+            byRef));
     }
 
     return result;
@@ -749,6 +784,50 @@ ASTPtr SemanticAnalyzer::buildRange(ParseNode *node)
     return make_unique<RangeTypeNode>(move(low), move(high));
 }
 
+int SemanticAnalyzer::registerArrayType(ParseNode *typeNode)
+{
+    if (!typeNode)
+        return 0;
+
+    ParseNode *arrayNode = child(typeNode, "<array_type>");
+    if (!arrayNode)
+        return 0;
+
+    ParseNode *rangeNode = child(arrayNode, "<range>");
+    ParseNode *elemTypeNode = nullptr;
+    for (ParseNode *ch : arrayNode->children)
+    {
+        if (ch->label == "<type>")
+        {
+            elemTypeNode = ch;
+            break;
+        }
+    }
+
+    int low = 0, high = 0;
+    if (rangeNode)
+    {
+        auto consts = children(rangeNode, "<constant>");
+        if (consts.size() >= 1)
+        {
+            ASTPtr lo = visitConstant(consts[0]);
+            if (lo && lo->kind == ASTKind::Num)
+                low = stoi(static_cast<NumNode *>(lo.get())->rawValue);
+        }
+        if (consts.size() >= 2)
+        {
+            ASTPtr hi = visitConstant(consts[1]);
+            if (hi && hi->kind == ASTKind::Num)
+                high = stoi(static_cast<NumNode *>(hi.get())->rawValue);
+        }
+    }
+
+    TypeCode etyp = resolveType(elemTypeNode);
+    int elsz = 1;
+
+    return symtab.enterArray(TYPE_ARRAY, etyp, 0, low, high, elsz);
+}
+
 ASTPtr SemanticAnalyzer::buildEnumerated(ParseNode *node)
 {
     vector<string> names;
@@ -789,13 +868,45 @@ ASTPtr SemanticAnalyzer::copyTypeNode(const ASTNode *node)
     if (!node)
         return nullptr;
 
-    if (node->kind == ASTKind::TypeName)
+    switch (node->kind)
+    {
+    case ASTKind::TypeName:
     {
         const auto *tn = static_cast<const TypeNameNode *>(node);
         return make_unique<TypeNameNode>(tn->name, tn->loc);
     }
-
-    return createTypeNode(nullptr);
+    case ASTKind::ArrayType:
+    {
+        const auto *at = static_cast<const ArrayTypeNode *>(node);
+        return make_unique<ArrayTypeNode>(
+            copyTypeNode(at->indexType.get()),
+            copyTypeNode(at->elementType.get()),
+            at->loc);
+    }
+    case ASTKind::RecordType:
+    {
+        const auto *rt = static_cast<const RecordTypeNode *>(node);
+        vector<ASTPtr> fields;
+        for (const auto &f : rt->fields)
+            fields.push_back(copyTypeNode(f.get()));
+        return make_unique<RecordTypeNode>(move(fields), rt->loc);
+    }
+    case ASTKind::RangeType:
+    {
+        const auto *rng = static_cast<const RangeTypeNode *>(node);
+        return make_unique<RangeTypeNode>(
+            copyTypeNode(rng->low.get()),
+            copyTypeNode(rng->high.get()),
+            rng->loc);
+    }
+    case ASTKind::VarDecl:
+    {
+        const auto *vd = static_cast<const VarDeclNode *>(node);
+        return make_unique<VarDeclNode>(vd->name, copyTypeNode(vd->typeNode.get()), vd->loc);
+    }
+    default:
+        return make_unique<TypeNameNode>("<unknown-type>");
+    }
 }
 
 ASTPtr SemanticAnalyzer::visitConstant(ParseNode *node)
@@ -983,14 +1094,19 @@ ASTPtr SemanticAnalyzer::visitIfStmt(ParseNode *node)
 ASTPtr SemanticAnalyzer::visitWhileStmt(ParseNode *node)
 {
     ParseNode *conditionParse = child(node, "<expression>");
-    ParseNode *bodyParse = child(node, "<statement>");
 
     ASTPtr condition = visitExpression(conditionParse);
     checkConditionType(getTypeFromAST(condition.get()), "while");
 
-    return make_unique<WhileNode>(
-        move(condition),
-        visitStatement(bodyParse));
+    ASTPtr body;
+    if (ParseNode *stmtParse = child(node, "<statement>"))
+        body = visitStatement(stmtParse);
+    else if (ParseNode *compoundParse = child(node, "<compound-statement>"))
+        body = visitCompoundStmt(compoundParse);
+    else
+        body = make_unique<BlockNode>(vector<ASTPtr>{});
+
+    return make_unique<WhileNode>(move(condition), move(body));
 }
 
 ASTPtr SemanticAnalyzer::visitRepeatStmt(ParseNode *node)
@@ -1012,11 +1128,33 @@ ASTPtr SemanticAnalyzer::visitForStmt(ParseNode *node)
     bool downto = containsTerminal(node, "downtosy");
 
     string iterName = ident ? terminalValue(ident) : "<iterator>";
-    lookupSymbol(iterName);
+    int iterIdx = lookupSymbol(iterName);
+
+    if (iterIdx >= 0)
+    {
+        TypeCode iterType = symtab.tab[iterIdx].type;
+        if (iterType != TYPE_INTEGER && iterType != TYPE_CHAR && iterType != TYPE_NONE)
+            semanticError("for loop control variable '" + iterName + "' must be integer or char");
+    }
 
     ASTPtr startExpr = exprs.size() >= 1 ? visitExpression(exprs[0]) : nullptr;
     ASTPtr endExpr = exprs.size() >= 2 ? visitExpression(exprs[1]) : nullptr;
-    ASTPtr body = visitStatement(child(node, "<statement>"));
+
+    if (startExpr && endExpr)
+    {
+        TypeCode startT = getTypeFromAST(startExpr.get());
+        TypeCode endT = getTypeFromAST(endExpr.get());
+        if (startT != TYPE_NONE && endT != TYPE_NONE && startT != endT)
+            semanticError("for loop bounds must have the same type");
+    }
+
+    ASTPtr body;
+    if (ParseNode *stmtParse = child(node, "<statement>"))
+        body = visitStatement(stmtParse);
+    else if (ParseNode *compoundParse = child(node, "<compound-statement>"))
+        body = visitCompoundStmt(compoundParse);
+    else
+        body = make_unique<BlockNode>(vector<ASTPtr>{});
 
     return make_unique<ForNode>(
         iterName,
@@ -1032,11 +1170,14 @@ ASTPtr SemanticAnalyzer::visitProcCall(ParseNode *node)
     string name = ident ? terminalValue(ident) : "<call>";
 
     int idx = lookupSymbol(name);
+    TypeCode retType = TYPE_NONE;
     if (idx >= 0)
     {
         ObjClass obj = symtab.tab[idx].obj;
         if (obj != OBJ_PROCEDURE && obj != OBJ_FUNCTION)
             semanticError("'" + name + "' is not a procedure or function");
+        if (obj == OBJ_FUNCTION)
+            retType = symtab.tab[idx].type;
     }
 
     vector<ASTPtr> args;
@@ -1049,14 +1190,55 @@ ASTPtr SemanticAnalyzer::visitProcCall(ParseNode *node)
         }
     }
 
-    return make_unique<ProcedureCallNode>(name, move(args));
+    auto callNode = make_unique<ProcedureCallNode>(name, move(args));
+    if (retType != TYPE_NONE)
+        setType(callNode.get(), retType);
+    return callNode;
 }
 
 ASTPtr SemanticAnalyzer::visitCaseStmt(ParseNode *node)
 {
-    (void)node;
-    semanticError("case statement not yet implemented in semantic analyzer");
-    return make_unique<EmptyNode>();
+    ParseNode *exprParse = child(node, "<expression>");
+    ASTPtr selector = visitExpression(exprParse);
+    TypeCode selType = getTypeFromAST(selector.get());
+
+    if (selType != TYPE_NONE && selType != TYPE_INTEGER &&
+        selType != TYPE_CHAR && selType != TYPE_BOOLEAN)
+    {
+        semanticError("case selector must be integer, char, or boolean");
+    }
+
+    vector<ASTPtr> arms;
+    ParseNode *caseBlock = child(node, "<case-block>");
+    while (caseBlock)
+    {
+        vector<ASTPtr> labels;
+        ParseNode *stmtParse = nullptr;
+        ParseNode *nextBlock = nullptr;
+
+        for (ParseNode *ch : caseBlock->children)
+        {
+            if (ch->label == "<constant>")
+            {
+                labels.push_back(visitConstant(ch));
+            }
+            else if (ch->label == "<statement>")
+            {
+                stmtParse = ch;
+            }
+            else if (ch->label == "<case-block>")
+            {
+                nextBlock = ch;
+            }
+        }
+
+        ASTPtr body = stmtParse ? visitStatement(stmtParse) : make_unique<EmptyNode>();
+        arms.push_back(make_unique<CaseArmNode>(move(labels), move(body)));
+
+        caseBlock = nextBlock;
+    }
+
+    return make_unique<CaseNode>(move(selector), move(arms));
 }
 
 // Expressions
@@ -1081,7 +1263,7 @@ ASTPtr SemanticAnalyzer::visitExpression(ParseNode *node)
         TypeCode leftT = getTypeFromAST(result.get());
         TypeCode rightT = getTypeFromAST(right.get());
 
-        if (leftT != TYPE_NONE && rightT != TYPE_NONE && !isCompatible(leftT, rightT))
+        if (leftT != TYPE_NONE && rightT != TYPE_NONE && !isRelationalCompatible(leftT, rightT))
             semanticError("incompatible types in relational expression");
 
         auto binop = make_unique<BinOpNode>(op, move(result), move(right));
@@ -1123,8 +1305,22 @@ ASTPtr SemanticAnalyzer::visitSimpleExpr(ParseNode *node)
 
             TypeCode leftT = getTypeFromAST(result.get());
             TypeCode rightT = getTypeFromAST(right.get());
-            if (op == "+" || op == "-")
+
+            if (op == "or")
             {
+                if (leftT != TYPE_NONE && leftT != TYPE_BOOLEAN)
+                    semanticError("'or' operator requires boolean operands");
+                if (rightT != TYPE_NONE && rightT != TYPE_BOOLEAN)
+                    semanticError("'or' operator requires boolean operands");
+            }
+            else if (op == "+" || op == "-")
+            {
+                bool leftNum = (leftT == TYPE_INTEGER || leftT == TYPE_REAL);
+                bool rightNum = (rightT == TYPE_INTEGER || rightT == TYPE_REAL);
+                if (leftT != TYPE_NONE && !leftNum)
+                    semanticError("arithmetic operator '" + op + "' requires numeric operands");
+                if (rightT != TYPE_NONE && !rightNum)
+                    semanticError("arithmetic operator '" + op + "' requires numeric operands");
                 if (leftT != TYPE_NONE && rightT != TYPE_NONE && !isCompatible(leftT, rightT))
                     semanticError("incompatible types in additive expression");
             }
@@ -1161,8 +1357,30 @@ ASTPtr SemanticAnalyzer::visitTerm(ParseNode *node)
 
             TypeCode leftT = getTypeFromAST(result.get());
             TypeCode rightT = getTypeFromAST(right.get());
-            if (leftT != TYPE_NONE && rightT != TYPE_NONE && !isCompatible(leftT, rightT))
-                semanticError("incompatible types in multiplicative expression");
+
+            if (op == "div" || op == "mod")
+            {
+                if (leftT != TYPE_NONE && leftT != TYPE_INTEGER)
+                    semanticError("'" + op + "' operator requires integer operands");
+                if (rightT != TYPE_NONE && rightT != TYPE_INTEGER)
+                    semanticError("'" + op + "' operator requires integer operands");
+            }
+            else if (op == "and")
+            {
+                if (leftT != TYPE_NONE && leftT != TYPE_BOOLEAN)
+                    semanticError("'and' operator requires boolean operands");
+                if (rightT != TYPE_NONE && rightT != TYPE_BOOLEAN)
+                    semanticError("'and' operator requires boolean operands");
+            }
+            else if (op == "+" || op == "-" || op == "*" || op == "/")
+            {
+                bool leftNum = (leftT == TYPE_INTEGER || leftT == TYPE_REAL);
+                bool rightNum = (rightT == TYPE_INTEGER || rightT == TYPE_REAL);
+                if (leftT != TYPE_NONE && !leftNum)
+                    semanticError("arithmetic operator '" + op + "' requires numeric operands");
+                if (rightT != TYPE_NONE && !rightNum)
+                    semanticError("arithmetic operator '" + op + "' requires numeric operands");
+            }
 
             TypeCode resT = resultTypeOfBinOp(op, leftT, rightT);
             auto binop = make_unique<BinOpNode>(op, move(result), move(right));
@@ -1178,34 +1396,6 @@ ASTPtr SemanticAnalyzer::visitFactor(ParseNode *node)
 {
     if (!node)
         return nullptr;
-
-    if (ParseNode *intcon = firstTerminal(node, "intcon"))
-    {
-        auto n = make_unique<NumNode>(terminalValue(intcon), false);
-        setType(n.get(), TYPE_INTEGER);
-        return n;
-    }
-
-    if (ParseNode *realcon = firstTerminal(node, "realcon"))
-    {
-        auto n = make_unique<NumNode>(terminalValue(realcon), true);
-        setType(n.get(), TYPE_REAL);
-        return n;
-    }
-
-    if (ParseNode *charcon = firstTerminal(node, "charcon"))
-    {
-        auto n = make_unique<CharNode>(terminalValue(charcon));
-        setType(n.get(), TYPE_CHAR);
-        return n;
-    }
-
-    if (ParseNode *str = firstTerminal(node, "string"))
-    {
-        auto n = make_unique<StringNode>(terminalValue(str));
-        setType(n.get(), TYPE_STRING);
-        return n;
-    }
 
     if (containsTerminal(node, "notsy"))
     {
@@ -1230,6 +1420,36 @@ ASTPtr SemanticAnalyzer::visitFactor(ParseNode *node)
 
     if (ParseNode *expr = child(node, "<expression>"))
         return visitExpression(expr);
+
+    for (ParseNode *ch : node->children)
+    {
+        if (!isTerminal(ch)) continue;
+        string name = terminalName(ch);
+        if (name == "intcon")
+        {
+            auto n = make_unique<NumNode>(terminalValue(ch), false);
+            setType(n.get(), TYPE_INTEGER);
+            return n;
+        }
+        if (name == "realcon")
+        {
+            auto n = make_unique<NumNode>(terminalValue(ch), true);
+            setType(n.get(), TYPE_REAL);
+            return n;
+        }
+        if (name == "charcon")
+        {
+            auto n = make_unique<CharNode>(terminalValue(ch));
+            setType(n.get(), TYPE_CHAR);
+            return n;
+        }
+        if (name == "string")
+        {
+            auto n = make_unique<StringNode>(terminalValue(ch));
+            setType(n.get(), TYPE_STRING);
+            return n;
+        }
+    }
 
     return nullptr;
 }

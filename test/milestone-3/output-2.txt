@@ -1,0 +1,422 @@
+programsy
+ident (Arithmetic)
+semicolon
+varsy
+ident (a)
+comma
+ident (b)
+colon
+ident (integer)
+semicolon
+ident (x)
+comma
+ident (y)
+colon
+ident (real)
+semicolon
+ident (res)
+colon
+ident (real)
+semicolon
+beginsy
+ident (a)
+becomes
+intcon (10)
+semicolon
+ident (b)
+becomes
+intcon (3)
+semicolon
+ident (x)
+becomes
+realcon (2.5)
+semicolon
+ident (y)
+becomes
+realcon (1.5)
+semicolon
+ident (res)
+becomes
+ident (a)
+plus
+ident (b)
+semicolon
+ident (res)
+becomes
+ident (x)
+times
+ident (y)
+semicolon
+ident (res)
+becomes
+ident (a)
+rdiv
+ident (b)
+semicolon
+ident (a)
+becomes
+ident (a)
+idiv
+ident (b)
+semicolon
+ident (a)
+becomes
+ident (a)
+imod
+ident (b)
+semicolon
+ident (res)
+becomes
+ident (x)
+minus
+ident (y)
+semicolon
+
+endsy
+period
+
+--- PARSE TREE ---
+<program>
+├── <program_header>
+│   ├── programsy
+│   ├── ident(Arithmetic)
+│   └── semicolon
+├── <declaration_part>
+│   └── <var_decl>
+│       ├── varsy
+│       ├── <var_item>
+│       │   ├── <identifier_list>
+│       │   │   ├── ident(a)
+│       │   │   └── ident(b)
+│       │   ├── colon
+│       │   ├── <type>
+│       │   │   └── ident(integer)
+│       │   └── semicolon
+│       ├── <var_item>
+│       │   ├── <identifier_list>
+│       │   │   ├── ident(x)
+│       │   │   └── ident(y)
+│       │   ├── colon
+│       │   ├── <type>
+│       │   │   └── ident(real)
+│       │   └── semicolon
+│       └── <var_item>
+│           ├── <identifier_list>
+│           │   └── ident(res)
+│           ├── colon
+│           ├── <type>
+│           │   └── ident(real)
+│           └── semicolon
+├── <block>
+│   └── <compound-statement>
+│       ├── beginsy
+│       ├── <statement-list>
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(a)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── intcon(10)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(b)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── intcon(3)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(x)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── realcon(2.5)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(y)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── realcon(1.5)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(res)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               ├── <term>
+│       │   │               │   └── <factor>
+│       │   │               │       └── <variable>
+│       │   │               │           └── ident(a)
+│       │   │               ├── <additive-operator>
+│       │   │               │   └── plus
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(b)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(res)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   ├── <factor>
+│       │   │                   │   └── <variable>
+│       │   │                   │       └── ident(x)
+│       │   │                   ├── <multiplicative-operator>
+│       │   │                   │   └── times
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(y)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(res)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   ├── <factor>
+│       │   │                   │   └── <variable>
+│       │   │                   │       └── ident(a)
+│       │   │                   ├── <multiplicative-operator>
+│       │   │                   │   └── rdiv
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(b)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(a)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   ├── <factor>
+│       │   │                   │   └── <variable>
+│       │   │                   │       └── ident(a)
+│       │   │                   ├── <multiplicative-operator>
+│       │   │                   │   └── idiv
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(b)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(a)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   ├── <factor>
+│       │   │                   │   └── <variable>
+│       │   │                   │       └── ident(a)
+│       │   │                   ├── <multiplicative-operator>
+│       │   │                   │   └── imod
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(b)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(res)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               ├── <term>
+│       │   │               │   └── <factor>
+│       │   │               │       └── <variable>
+│       │   │               │           └── ident(x)
+│       │   │               ├── <additive-operator>
+│       │   │               │   └── minus
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(y)
+│       │   ├── semicolon
+│       │   └── <statement>
+│       └── endsy
+└── period
+
+--- ABSTRACT SYNTAX TREE ---
+ProgramNode(name: 'Arithmetic')
+  Declarations
+    VarDecl(name: 'a')
+      TypeName(integer)
+    VarDecl(name: 'b')
+      TypeName(integer)
+    VarDecl(name: 'x')
+      TypeName(real)
+    VarDecl(name: 'y')
+      TypeName(real)
+    VarDecl(name: 'res')
+      TypeName(real)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('a')
+        value:
+          IntegerNumber(10)
+      Assign
+        target:
+          Var('b')
+        value:
+          IntegerNumber(3)
+      Assign
+        target:
+          Var('x')
+        value:
+          RealNumber(2.5)
+      Assign
+        target:
+          Var('y')
+        value:
+          RealNumber(1.5)
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('+')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('*')
+            Var('x')
+            Var('y')
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('/')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('a')
+        value:
+          BinOp('div')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('a')
+        value:
+          BinOp('mod')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('-')
+            Var('x')
+            Var('y')
+      Empty
+
+--- DECORATED AST ---
+ProgramNode(name: 'Arithmetic')
+  Declarations
+    VarDecl(name: 'a')
+      TypeName(integer)
+    VarDecl(name: 'b')
+      TypeName(integer)
+    VarDecl(name: 'x')
+      TypeName(real)
+    VarDecl(name: 'y')
+      TypeName(real)
+    VarDecl(name: 'res')
+      TypeName(real)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('a' : integer [tab=43, lev=0])
+        value:
+          IntegerNumber(10 : integer)
+      Assign
+        target:
+          Var('b' : integer [tab=44, lev=0])
+        value:
+          IntegerNumber(3 : integer)
+      Assign
+        target:
+          Var('x' : real [tab=45, lev=0])
+        value:
+          RealNumber(2.5 : real)
+      Assign
+        target:
+          Var('y' : real [tab=46, lev=0])
+        value:
+          RealNumber(1.5 : real)
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('+' : integer)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('*' : real)
+            Var('x' : real [tab=45, lev=0])
+            Var('y' : real [tab=46, lev=0])
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('/' : real)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('a' : integer [tab=43, lev=0])
+        value:
+          BinOp('div' : integer)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('a' : integer [tab=43, lev=0])
+        value:
+          BinOp('mod' : integer)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('-' : real)
+            Var('x' : real [tab=45, lev=0])
+            Var('y' : real [tab=46, lev=0])
+      Empty

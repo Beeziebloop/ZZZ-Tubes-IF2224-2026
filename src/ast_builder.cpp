@@ -608,11 +608,18 @@ ASTPtr ASTBuilder::buildIf(ParseNode* node) {
 
 ASTPtr ASTBuilder::buildWhile(ParseNode* node) {
     ParseNode* conditionParse = child(node, "<expression>");
-    ParseNode* bodyParse = child(node, "<statement>");
+
+    ASTPtr body;
+    if (ParseNode* stmtParse = child(node, "<statement>"))
+        body = buildStatement(stmtParse);
+    else if (ParseNode* compoundParse = child(node, "<compound-statement>"))
+        body = buildCompoundStatement(compoundParse);
+    else
+        body = std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 
     return std::make_unique<WhileNode>(
         buildExpression(conditionParse),
-        buildStatement(bodyParse)
+        std::move(body)
     );
 }
 
@@ -635,14 +642,20 @@ ASTPtr ASTBuilder::buildFor(ParseNode* node) {
     ASTPtr startExpr = exprs.size() >= 1 ? buildExpression(exprs[0]) : nullptr;
     ASTPtr endExpr = exprs.size() >= 2 ? buildExpression(exprs[1]) : nullptr;
 
-    ParseNode* bodyParse = child(node, "<statement>");
+    ASTPtr body;
+    if (ParseNode* stmtParse = child(node, "<statement>"))
+        body = buildStatement(stmtParse);
+    else if (ParseNode* compoundParse = child(node, "<compound-statement>"))
+        body = buildCompoundStatement(compoundParse);
+    else
+        body = std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 
     return std::make_unique<ForNode>(
         ident ? terminalValue(ident) : "<iterator>",
         std::move(startExpr),
         std::move(endExpr),
         downto,
-        buildStatement(bodyParse)
+        std::move(body)
     );
 }
 
@@ -759,22 +772,8 @@ ASTPtr ASTBuilder::buildTerm(ParseNode* node) {
 ASTPtr ASTBuilder::buildFactor(ParseNode* node) {
     if (!node) return nullptr;
 
-    if (ParseNode* intcon = firstTerminal(node, "intcon")) {
-        return std::make_unique<NumNode>(terminalValue(intcon), false);
-    }
-
-    if (ParseNode* realcon = firstTerminal(node, "realcon")) {
-        return std::make_unique<NumNode>(terminalValue(realcon), true);
-    }
-
-    if (ParseNode* charcon = firstTerminal(node, "charcon")) {
-        return std::make_unique<CharNode>(terminalValue(charcon));
-    }
-
-    if (ParseNode* str = firstTerminal(node, "string")) {
-        return std::make_unique<StringNode>(terminalValue(str));
-    }
-
+    // Cek structured children dulu sebelum terminal search,
+    // supaya literal di dalam argumen function call tidak ditangkap duluan
     if (containsTerminal(node, "notsy")) {
         for (ParseNode* ch : node->children) {
             if (ch->label == "<factor>") {
@@ -793,6 +792,16 @@ ASTPtr ASTBuilder::buildFactor(ParseNode* node) {
 
     if (ParseNode* expr = child(node, "<expression>")) {
         return buildExpression(expr);
+    }
+
+    // Literal hanya valid jika langsung di bawah <factor> 
+    for (ParseNode* ch : node->children) {
+        if (!isTerminal(ch)) continue;
+        std::string name = terminalName(ch);
+        if (name == "intcon")  return std::make_unique<NumNode>(terminalValue(ch), false);
+        if (name == "realcon") return std::make_unique<NumNode>(terminalValue(ch), true);
+        if (name == "charcon") return std::make_unique<CharNode>(terminalValue(ch));
+        if (name == "string")  return std::make_unique<StringNode>(terminalValue(ch));
     }
 
     return nullptr;

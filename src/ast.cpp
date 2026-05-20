@@ -390,3 +390,33 @@ void ForNode::print(std::ostream& os, int indent) const {
     os << "body:\n";
     if (body) body->print(os, indent + 4);
 }
+
+CaseArmNode::CaseArmNode(std::vector<ASTPtr> labels, ASTPtr body, SourceLoc loc)
+    : ASTNode(ASTKind::CaseArm, loc), labels(std::move(labels)), body(std::move(body)) {}
+
+void CaseArmNode::print(std::ostream& os, int indent) const {
+    pad(os, indent);
+    os << "CaseArm\n";
+    pad(os, indent + 2);
+    os << "labels:\n";
+    for (const auto& lbl : labels)
+        if (lbl) lbl->print(os, indent + 4);
+    pad(os, indent + 2);
+    os << "body:\n";
+    if (body) body->print(os, indent + 4);
+}
+
+CaseNode::CaseNode(ASTPtr selector, std::vector<ASTPtr> arms, SourceLoc loc)
+    : ASTNode(ASTKind::CaseStatement, loc), selector(std::move(selector)), arms(std::move(arms)) {}
+
+void CaseNode::print(std::ostream& os, int indent) const {
+    pad(os, indent);
+    os << "Case\n";
+    pad(os, indent + 2);
+    os << "selector:\n";
+    if (selector) selector->print(os, indent + 4);
+    pad(os, indent + 2);
+    os << "arms:\n";
+    for (const auto& arm : arms)
+        if (arm) arm->print(os, indent + 4);
+}

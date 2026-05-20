@@ -1,9 +1,18 @@
 #include "symbol_table.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <iomanip>
 #include <iostream>
 
 using namespace std;
+
+static string toLower(string s)
+{
+    transform(s.begin(), s.end(), s.begin(),
+              [](unsigned char c) { return static_cast<char>(tolower(c)); });
+    return s;
+}
 
 SymbolTable::SymbolTable()
 {
@@ -62,30 +71,32 @@ int SymbolTable::enter(const string &name,
                        int nrm,
                        int adr)
 {
+    const string lname = toLower(name);
     int currentBlock = display[currentLevel];
 
     // Cek redeclaration pada scope yang sama
     int idx = btab[currentBlock].last;
+    const int maxIter = static_cast<int>(tab.size()) + 1;
+    int steps = 0;
 
-    while (idx != 0)
+    while (idx > 0 && steps < maxIter)
     {
         if (tab[idx].lev != currentLevel)
-        {
             break;
-        }
 
-        if (tab[idx].identifier == name)
+        if (tab[idx].identifier == lname)
         {
             cerr << "Semantic Error: redeclaration of identifier '"
-                 << name << "'" << endl;
+                 << lname << "'" << endl;
             return idx;
         }
 
         idx = tab[idx].link;
+        ++steps;
     }
 
     TabEntry entry;
-    entry.identifier = name;
+    entry.identifier = lname;
     entry.link = btab[currentBlock].last;
     entry.obj = obj;
     entry.type = type;
@@ -110,19 +121,22 @@ int SymbolTable::enter(const string &name,
 
 int SymbolTable::lookup(const string &name) const
 {
+    const string lname = toLower(name);
+    const int maxIter = static_cast<int>(tab.size()) + 1;
+
     for (int level = currentLevel; level >= 0; level--)
     {
         int blockIndex = display[level];
         int idx = btab[blockIndex].last;
+        int steps = 0;
 
-        while (idx != 0)
+        while (idx > 0 && steps < maxIter)
         {
-            if (tab[idx].identifier == name)
-            {
+            if (tab[idx].identifier == lname)
                 return idx;
-            }
 
             idx = tab[idx].link;
+            ++steps;
         }
     }
 

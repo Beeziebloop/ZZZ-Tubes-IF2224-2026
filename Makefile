@@ -65,8 +65,38 @@ test2-5: all
 	mkdir -p test/milestone-2
 	./$(TARGET) test/milestone-2/input-5.txt test/milestone-2/output-5.txt
 
+# Shortcut test milestone 3 semua input sekaligus (full output)
+test3: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --full
+	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --full
+	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --full
+	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --full
+	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --full
+
+test3-1: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --full
+
+test3-2: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --full
+
+test3-3: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --full
+
+test3-4: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --full
+
+test3-5: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --full
+
 # Bersihkan hasil kompilasi
 clean:
 	rm -rf $(BIN_DIR)
 
-.PHONY: all run runout runparse test1 test2 clean
+.PHONY: all run runout runparse test1 test2 test3 \
+        test3-1 test3-2 test3-3 test3-4 test3-5 clean

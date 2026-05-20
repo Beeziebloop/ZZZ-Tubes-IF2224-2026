@@ -22,6 +22,8 @@ enum class ASTKind {
     WhileStatement,
     RepeatStatement,
     ForStatement,
+    CaseStatement,
+    CaseArm,
     BinOp,
     UnaryOp,
     Var,
@@ -268,6 +270,20 @@ struct ForNode final : ASTNode {
     bool isDownTo = false;
     ASTPtr body;
     ForNode(std::string iterName, ASTPtr startExpr, ASTPtr endExpr, bool isDownTo, ASTPtr body, SourceLoc loc = {});
+    void print(std::ostream& os, int indent = 0) const override;
+};
+
+struct CaseArmNode final : ASTNode {
+    std::vector<ASTPtr> labels;
+    ASTPtr body;
+    CaseArmNode(std::vector<ASTPtr> labels, ASTPtr body, SourceLoc loc = {});
+    void print(std::ostream& os, int indent = 0) const override;
+};
+
+struct CaseNode final : ASTNode {
+    ASTPtr selector;
+    std::vector<ASTPtr> arms;
+    CaseNode(ASTPtr selector, std::vector<ASTPtr> arms, SourceLoc loc = {});
     void print(std::ostream& os, int indent = 0) const override;
 };
 

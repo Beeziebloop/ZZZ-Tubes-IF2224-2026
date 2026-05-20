@@ -1,0 +1,19 @@
+program Subprograms;
+var
+  result: integer;
+
+function Add(a, b: integer): integer;
+begin
+  Add := a + b
+end;
+
+procedure PrintResult(x: integer);
+begin
+  writeln(x)
+end;
+
+begin
+  result := Add(3, 4);
+  PrintResult(result);
+  writeln(result)
+end.

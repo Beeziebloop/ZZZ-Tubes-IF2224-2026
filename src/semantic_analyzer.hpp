@@ -57,6 +57,7 @@ private:
     ASTPtr copyTypeNode(const ASTNode *node);
     TypeCode resolveType(ParseNode *typeNode);
     TypeCode resolveTypeName(const std::string &name);
+    int registerArrayType(ParseNode *typeNode);
 
     // Constants
     ASTPtr visitConstant(ParseNode *node);
@@ -92,6 +93,7 @@ private:
     void decorateVar(ASTNode *node, const std::string &name);
     TypeCode getTypeFromAST(const ASTNode *node);
     bool isCompatible(TypeCode t1, TypeCode t2);
+    bool isRelationalCompatible(TypeCode t1, TypeCode t2);
     bool isAssignCompatible(TypeCode target, TypeCode value);
     TypeCode resultTypeOfBinOp(const std::string &op, TypeCode left, TypeCode right);
     void checkAssignment(TypeCode target,

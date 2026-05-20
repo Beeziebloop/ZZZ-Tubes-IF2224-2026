@@ -1,0 +1,366 @@
+programsy
+ident (ControlFlow)
+semicolon
+varsy
+ident (i)
+colon
+ident (integer)
+semicolon
+ident (found)
+colon
+ident (boolean)
+semicolon
+beginsy
+ident (i)
+becomes
+intcon (1)
+semicolon
+ident (found)
+becomes
+ident (false)
+semicolon
+whilesy
+ident (i)
+leq
+intcon (10)
+dosy
+beginsy
+ifsy
+ident (i)
+imod
+intcon (2)
+eql
+intcon (0)
+thensy
+beginsy
+ident (found)
+becomes
+ident (true)
+semicolon
+ident (writeln)
+lparent
+ident (i)
+rparent
+endsy
+semicolon
+ident (i)
+becomes
+ident (i)
+plus
+intcon (1)
+endsy
+semicolon
+repeatsy
+ident (i)
+becomes
+ident (i)
+minus
+intcon (1)
+untilsy
+ident (i)
+eql
+intcon (0)
+endsy
+period
+
+--- PARSE TREE ---
+<program>
+├── <program_header>
+│   ├── programsy
+│   ├── ident(ControlFlow)
+│   └── semicolon
+├── <declaration_part>
+│   └── <var_decl>
+│       ├── varsy
+│       ├── <var_item>
+│       │   ├── <identifier_list>
+│       │   │   └── ident(i)
+│       │   ├── colon
+│       │   ├── <type>
+│       │   │   └── ident(integer)
+│       │   └── semicolon
+│       └── <var_item>
+│           ├── <identifier_list>
+│           │   └── ident(found)
+│           ├── colon
+│           ├── <type>
+│           │   └── ident(boolean)
+│           └── semicolon
+├── <block>
+│   └── <compound-statement>
+│       ├── beginsy
+│       ├── <statement-list>
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(i)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── intcon(1)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(found)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(false)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <while-statement>
+│       │   │       ├── whilesy
+│       │   │       ├── <expression>
+│       │   │       │   ├── <simple-expression>
+│       │   │       │   │   └── <term>
+│       │   │       │   │       └── <factor>
+│       │   │       │   │           └── <variable>
+│       │   │       │   │               └── ident(i)
+│       │   │       │   ├── <relational-operator>
+│       │   │       │   │   └── leq
+│       │   │       │   └── <simple-expression>
+│       │   │       │       └── <term>
+│       │   │       │           └── <factor>
+│       │   │       │               └── intcon(10)
+│       │   │       ├── dosy
+│       │   │       └── <statement>
+│       │   │           └── <compound-statement>
+│       │   │               ├── beginsy
+│       │   │               ├── <statement-list>
+│       │   │               │   ├── <statement>
+│       │   │               │   │   └── <if-statement>
+│       │   │               │   │       ├── ifsy
+│       │   │               │   │       ├── <expression>
+│       │   │               │   │       │   ├── <simple-expression>
+│       │   │               │   │       │   │   └── <term>
+│       │   │               │   │       │   │       ├── <factor>
+│       │   │               │   │       │   │       │   └── <variable>
+│       │   │               │   │       │   │       │       └── ident(i)
+│       │   │               │   │       │   │       ├── <multiplicative-operator>
+│       │   │               │   │       │   │       │   └── imod
+│       │   │               │   │       │   │       └── <factor>
+│       │   │               │   │       │   │           └── intcon(2)
+│       │   │               │   │       │   ├── <relational-operator>
+│       │   │               │   │       │   │   └── eql
+│       │   │               │   │       │   └── <simple-expression>
+│       │   │               │   │       │       └── <term>
+│       │   │               │   │       │           └── <factor>
+│       │   │               │   │       │               └── intcon(0)
+│       │   │               │   │       ├── thensy
+│       │   │               │   │       └── <statement>
+│       │   │               │   │           └── <compound-statement>
+│       │   │               │   │               ├── beginsy
+│       │   │               │   │               ├── <statement-list>
+│       │   │               │   │               │   ├── <statement>
+│       │   │               │   │               │   │   └── <assignment-statement>
+│       │   │               │   │               │   │       ├── <variable>
+│       │   │               │   │               │   │       │   └── ident(found)
+│       │   │               │   │               │   │       ├── becomes
+│       │   │               │   │               │   │       └── <expression>
+│       │   │               │   │               │   │           └── <simple-expression>
+│       │   │               │   │               │   │               └── <term>
+│       │   │               │   │               │   │                   └── <factor>
+│       │   │               │   │               │   │                       └── <variable>
+│       │   │               │   │               │   │                           └── ident(true)
+│       │   │               │   │               │   ├── semicolon
+│       │   │               │   │               │   └── <statement>
+│       │   │               │   │               │       └── <procedure/function-call>
+│       │   │               │   │               │           ├── ident(writeln)
+│       │   │               │   │               │           ├── lparent
+│       │   │               │   │               │           ├── <parameter-list>
+│       │   │               │   │               │           │   └── <expression>
+│       │   │               │   │               │           │       └── <simple-expression>
+│       │   │               │   │               │           │           └── <term>
+│       │   │               │   │               │           │               └── <factor>
+│       │   │               │   │               │           │                   └── <variable>
+│       │   │               │   │               │           │                       └── ident(i)
+│       │   │               │   │               │           └── rparent
+│       │   │               │   │               └── endsy
+│       │   │               │   ├── semicolon
+│       │   │               │   └── <statement>
+│       │   │               │       └── <assignment-statement>
+│       │   │               │           ├── <variable>
+│       │   │               │           │   └── ident(i)
+│       │   │               │           ├── becomes
+│       │   │               │           └── <expression>
+│       │   │               │               └── <simple-expression>
+│       │   │               │                   ├── <term>
+│       │   │               │                   │   └── <factor>
+│       │   │               │                   │       └── <variable>
+│       │   │               │                   │           └── ident(i)
+│       │   │               │                   ├── <additive-operator>
+│       │   │               │                   │   └── plus
+│       │   │               │                   └── <term>
+│       │   │               │                       └── <factor>
+│       │   │               │                           └── intcon(1)
+│       │   │               └── endsy
+│       │   ├── semicolon
+│       │   └── <statement>
+│       │       └── <repeat-statement>
+│       │           ├── repeatsy
+│       │           ├── <statement-list>
+│       │           │   └── <statement>
+│       │           │       └── <assignment-statement>
+│       │           │           ├── <variable>
+│       │           │           │   └── ident(i)
+│       │           │           ├── becomes
+│       │           │           └── <expression>
+│       │           │               └── <simple-expression>
+│       │           │                   ├── <term>
+│       │           │                   │   └── <factor>
+│       │           │                   │       └── <variable>
+│       │           │                   │           └── ident(i)
+│       │           │                   ├── <additive-operator>
+│       │           │                   │   └── minus
+│       │           │                   └── <term>
+│       │           │                       └── <factor>
+│       │           │                           └── intcon(1)
+│       │           ├── untilsy
+│       │           └── <expression>
+│       │               ├── <simple-expression>
+│       │               │   └── <term>
+│       │               │       └── <factor>
+│       │               │           └── <variable>
+│       │               │               └── ident(i)
+│       │               ├── <relational-operator>
+│       │               │   └── eql
+│       │               └── <simple-expression>
+│       │                   └── <term>
+│       │                       └── <factor>
+│       │                           └── intcon(0)
+│       └── endsy
+└── period
+
+--- ABSTRACT SYNTAX TREE ---
+ProgramNode(name: 'ControlFlow')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'found')
+      TypeName(boolean)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('i')
+        value:
+          IntegerNumber(1)
+      Assign
+        target:
+          Var('found')
+        value:
+          Var('false')
+      While
+        condition:
+          BinOp('<=')
+            Var('i')
+            IntegerNumber(10)
+        body:
+          BlockNode
+            If
+              condition:
+                BinOp('==')
+                  BinOp('mod')
+                    Var('i')
+                    IntegerNumber(2)
+                  IntegerNumber(0)
+              then:
+                BlockNode
+                  Assign
+                    target:
+                      Var('found')
+                    value:
+                      Var('true')
+                  ProcedureCall(name: 'writeln')
+                    Var('i')
+            Assign
+              target:
+                Var('i')
+              value:
+                BinOp('+')
+                  Var('i')
+                  IntegerNumber(1)
+      Repeat
+        body:
+          BlockNode
+            Assign
+              target:
+                Var('i')
+              value:
+                BinOp('-')
+                  Var('i')
+                  IntegerNumber(1)
+        until:
+          BinOp('==')
+            Var('i')
+            IntegerNumber(0)
+
+--- DECORATED AST ---
+ProgramNode(name: 'ControlFlow')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'found')
+      TypeName(boolean)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('i' : integer [tab=43, lev=0])
+        value:
+          IntegerNumber(1 : integer)
+      Assign
+        target:
+          Var('found' : boolean [tab=44, lev=0])
+        value:
+          Var('false' : boolean [tab=39, lev=0])
+      While
+        condition:
+          BinOp('<=' : boolean)
+            Var('i' : integer [tab=43, lev=0])
+            IntegerNumber(10 : integer)
+        body:
+          BlockNode
+            If
+              condition:
+                BinOp('==' : boolean)
+                  BinOp('mod' : integer)
+                    Var('i' : integer [tab=43, lev=0])
+                    IntegerNumber(2 : integer)
+                  IntegerNumber(0 : integer)
+              then:
+                BlockNode
+                  Assign
+                    target:
+                      Var('found' : boolean [tab=44, lev=0])
+                    value:
+                      Var('true' : boolean [tab=38, lev=0])
+                  ProcedureCall(name: 'writeln')
+                    Var('i' : integer [tab=43, lev=0])
+            Assign
+              target:
+                Var('i' : integer [tab=43, lev=0])
+              value:
+                BinOp('+' : integer)
+                  Var('i' : integer [tab=43, lev=0])
+                  IntegerNumber(1 : integer)
+      Repeat
+        body:
+          BlockNode
+            Assign
+              target:
+                Var('i' : integer [tab=43, lev=0])
+              value:
+                BinOp('-' : integer)
+                  Var('i' : integer [tab=43, lev=0])
+                  IntegerNumber(1 : integer)
+        until:
+          BinOp('==' : boolean)
+            Var('i' : integer [tab=43, lev=0])
+            IntegerNumber(0 : integer)

@@ -22,10 +22,18 @@ void writeTokens(const std::vector<Token>& tokens, const Lexer& lexer, std::ostr
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0]
-                  << " <input.txt> [parse_tree_output.txt]"
+                  << " <input.txt> [output.txt] [--full]"
                   << " or <input.txt> <token_output.txt> <parse_tree_output.txt>"
                   << std::endl;
         return 1;
+    }
+
+    // Cek flag --full
+    bool fullMode = false;
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--full") {
+            fullMode = true;
+        }
     }
 
     try {
@@ -36,17 +44,50 @@ int main(int argc, char* argv[]) {
         /* Tulis token ke terminal */
         writeTokens(tokens, lexer, std::cout);
 
-        /* Opsional: simpan token ke file.
-         *
-         * Mode:
-         *   argc == 3:
-         *     argv[2] dipakai sebagai output parse tree.
-         *
-         *   argc >= 4:
-         *     argv[2] dipakai sebagai output token.
-         *     argv[3] dipakai sebagai output parse tree.
-         */
-        if (argc >= 4) {
+        /* Mode --full: tulis semua section ke satu output file */
+        if (fullMode && argc >= 3) {
+            std::ofstream fullOut(argv[2]);
+            if (!fullOut.is_open()) {
+                std::cerr << "Error: Tidak bisa membuka file output: " << argv[2] << std::endl;
+                return 1;
+            }
+
+            writeTokens(tokens, lexer, fullOut);
+
+            fullOut << "\n--- PARSE TREE ---\n";
+            Parser parser(tokens);
+            std::unique_ptr<ParseNode> tree(parser.parse());
+            parser.printTree(tree.get(), std::cout);
+            parser.printTree(tree.get(), fullOut);
+
+            fullOut << "\n--- ABSTRACT SYNTAX TREE ---\n";
+            std::cout << "\n--- ABSTRACT SYNTAX TREE ---\n";
+            ASTBuilder astBuilder;
+            ASTPtr ast = astBuilder.build(tree.get());
+            if (ast) {
+                ast->print(std::cout);
+                ast->print(fullOut);
+            }
+
+            fullOut << "\n--- DECORATED AST ---\n";
+            std::cout << "\n--- DECORATED AST ---\n";
+            SemanticAnalyzer semanalyzer;
+            ASTPtr decoratedAst = semanalyzer.analyze(tree.get());
+            if (decoratedAst) {
+                decoratedAst->print(std::cout);
+                decoratedAst->print(fullOut);
+            }
+
+            // Symbol tables ke stdout saja (tidak ada ostream param)
+            semanalyzer.symtab.printTab();
+            semanalyzer.symtab.printBtab();
+            semanalyzer.symtab.printAtab();
+
+            return 0;
+        }
+
+        /* Mode lama */
+        if (argc >= 4 && !fullMode) {
             std::ofstream tokenOut(argv[2]);
             if (!tokenOut.is_open()) {
                 std::cerr << "Error: Tidak bisa membuka file output token: "
@@ -62,14 +103,14 @@ int main(int argc, char* argv[]) {
         std::cout << "\n--- PARSE TREE ---\n";
 
         Parser parser(tokens);
-        
+
         std::unique_ptr<ParseNode> tree(parser.parse());
 
         /* Cetak parse tree ke terminal */
         parser.printTree(tree.get(), std::cout);
 
         /* Mode 2 args: tulis parse tree ke file output */
-        if (argc == 3) {
+        if (argc == 3 && !fullMode) {
             std::ofstream treeOut(argv[2]);
             if (!treeOut.is_open()) {
                 std::cerr << "Error: Tidak bisa membuka file output parse tree: "
@@ -81,7 +122,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Parse tree output ditulis ke: " << argv[2] << std::endl;
         }
         /* Mode 3 args: tulis parse tree ke file output */
-        else if (argc >= 4) {
+        else if (argc >= 4 && !fullMode) {
             std::ofstream treeOut(argv[3]);
             if (!treeOut.is_open()) {
                 std::cerr << "Error: Tidak bisa membuka file output parse tree: "

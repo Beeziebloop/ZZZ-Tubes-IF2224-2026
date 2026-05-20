@@ -1,0 +1,7 @@
+program FuncTest;
+var result: integer;
+function Add(a, b: integer): integer;
+begin Add := a + b end;
+begin
+  result := Add(3, 4)
+end.

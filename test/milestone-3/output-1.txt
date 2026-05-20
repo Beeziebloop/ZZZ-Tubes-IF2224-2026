@@ -1,0 +1,226 @@
+programsy
+ident (BasicTypes)
+semicolon
+varsy
+ident (i)
+colon
+ident (integer)
+semicolon
+ident (r)
+colon
+ident (real)
+semicolon
+ident (c)
+colon
+ident (char)
+semicolon
+ident (b)
+colon
+ident (boolean)
+semicolon
+beginsy
+ident (i)
+becomes
+intcon (42)
+semicolon
+ident (r)
+becomes
+realcon (3.14)
+semicolon
+ident (c)
+becomes
+charcon ('A')
+semicolon
+ident (b)
+becomes
+ident (true)
+semicolon
+ident (r)
+becomes
+ident (i)
+semicolon
+
+endsy
+period
+
+--- PARSE TREE ---
+<program>
+├── <program_header>
+│   ├── programsy
+│   ├── ident(BasicTypes)
+│   └── semicolon
+├── <declaration_part>
+│   └── <var_decl>
+│       ├── varsy
+│       ├── <var_item>
+│       │   ├── <identifier_list>
+│       │   │   └── ident(i)
+│       │   ├── colon
+│       │   ├── <type>
+│       │   │   └── ident(integer)
+│       │   └── semicolon
+│       ├── <var_item>
+│       │   ├── <identifier_list>
+│       │   │   └── ident(r)
+│       │   ├── colon
+│       │   ├── <type>
+│       │   │   └── ident(real)
+│       │   └── semicolon
+│       ├── <var_item>
+│       │   ├── <identifier_list>
+│       │   │   └── ident(c)
+│       │   ├── colon
+│       │   ├── <type>
+│       │   │   └── ident(char)
+│       │   └── semicolon
+│       └── <var_item>
+│           ├── <identifier_list>
+│           │   └── ident(b)
+│           ├── colon
+│           ├── <type>
+│           │   └── ident(boolean)
+│           └── semicolon
+├── <block>
+│   └── <compound-statement>
+│       ├── beginsy
+│       ├── <statement-list>
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(i)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── intcon(42)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(r)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── realcon(3.14)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(c)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── charcon('A')
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(b)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(true)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(r)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── <variable>
+│       │   │                           └── ident(i)
+│       │   ├── semicolon
+│       │   └── <statement>
+│       └── endsy
+└── period
+
+--- ABSTRACT SYNTAX TREE ---
+ProgramNode(name: 'BasicTypes')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'r')
+      TypeName(real)
+    VarDecl(name: 'c')
+      TypeName(char)
+    VarDecl(name: 'b')
+      TypeName(boolean)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('i')
+        value:
+          IntegerNumber(42)
+      Assign
+        target:
+          Var('r')
+        value:
+          RealNumber(3.14)
+      Assign
+        target:
+          Var('c')
+        value:
+          Char('A')
+      Assign
+        target:
+          Var('b')
+        value:
+          Var('true')
+      Assign
+        target:
+          Var('r')
+        value:
+          Var('i')
+      Empty
+
+--- DECORATED AST ---
+ProgramNode(name: 'BasicTypes')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'r')
+      TypeName(real)
+    VarDecl(name: 'c')
+      TypeName(char)
+    VarDecl(name: 'b')
+      TypeName(boolean)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('i' : integer [tab=43, lev=0])
+        value:
+          IntegerNumber(42 : integer)
+      Assign
+        target:
+          Var('r' : real [tab=44, lev=0])
+        value:
+          RealNumber(3.14 : real)
+      Assign
+        target:
+          Var('c' : char [tab=45, lev=0])
+        value:
+          Char('A' : char)
+      Assign
+        target:
+          Var('b' : boolean [tab=46, lev=0])
+        value:
+          Var('true' : boolean [tab=38, lev=0])
+      Assign
+        target:
+          Var('r' : real [tab=44, lev=0])
+        value:
+          Var('i' : integer [tab=43, lev=0])
+      Empty

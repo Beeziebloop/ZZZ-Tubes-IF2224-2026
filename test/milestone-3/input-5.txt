@@ -1,0 +1,13 @@
+program ForLoop;
+var
+  i: integer;
+  total: integer;
+begin
+  total := 0;
+  for i := 1 to 10 do
+  begin
+    total := total + i;
+    writeln(i)
+  end;
+  writeln(total)
+end.

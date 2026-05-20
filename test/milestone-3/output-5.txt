@@ -1,0 +1,215 @@
+programsy
+ident (ForLoop)
+semicolon
+varsy
+ident (i)
+colon
+ident (integer)
+semicolon
+ident (total)
+colon
+ident (integer)
+semicolon
+beginsy
+ident (total)
+becomes
+intcon (0)
+semicolon
+forsy
+ident (i)
+becomes
+intcon (1)
+tosy
+intcon (10)
+dosy
+beginsy
+ident (total)
+becomes
+ident (total)
+plus
+ident (i)
+semicolon
+ident (writeln)
+lparent
+ident (i)
+rparent
+endsy
+semicolon
+ident (writeln)
+lparent
+ident (total)
+rparent
+endsy
+period
+
+--- PARSE TREE ---
+<program>
+├── <program_header>
+│   ├── programsy
+│   ├── ident(ForLoop)
+│   └── semicolon
+├── <declaration_part>
+│   └── <var_decl>
+│       ├── varsy
+│       ├── <var_item>
+│       │   ├── <identifier_list>
+│       │   │   └── ident(i)
+│       │   ├── colon
+│       │   ├── <type>
+│       │   │   └── ident(integer)
+│       │   └── semicolon
+│       └── <var_item>
+│           ├── <identifier_list>
+│           │   └── ident(total)
+│           ├── colon
+│           ├── <type>
+│           │   └── ident(integer)
+│           └── semicolon
+├── <block>
+│   └── <compound-statement>
+│       ├── beginsy
+│       ├── <statement-list>
+│       │   ├── <statement>
+│       │   │   └── <assignment-statement>
+│       │   │       ├── <variable>
+│       │   │       │   └── ident(total)
+│       │   │       ├── becomes
+│       │   │       └── <expression>
+│       │   │           └── <simple-expression>
+│       │   │               └── <term>
+│       │   │                   └── <factor>
+│       │   │                       └── intcon(0)
+│       │   ├── semicolon
+│       │   ├── <statement>
+│       │   │   └── <for-statement>
+│       │   │       ├── forsy
+│       │   │       ├── ident(i)
+│       │   │       ├── becomes
+│       │   │       ├── <expression>
+│       │   │       │   └── <simple-expression>
+│       │   │       │       └── <term>
+│       │   │       │           └── <factor>
+│       │   │       │               └── intcon(1)
+│       │   │       ├── tosy
+│       │   │       ├── <expression>
+│       │   │       │   └── <simple-expression>
+│       │   │       │       └── <term>
+│       │   │       │           └── <factor>
+│       │   │       │               └── intcon(10)
+│       │   │       ├── dosy
+│       │   │       └── <statement>
+│       │   │           └── <compound-statement>
+│       │   │               ├── beginsy
+│       │   │               ├── <statement-list>
+│       │   │               │   ├── <statement>
+│       │   │               │   │   └── <assignment-statement>
+│       │   │               │   │       ├── <variable>
+│       │   │               │   │       │   └── ident(total)
+│       │   │               │   │       ├── becomes
+│       │   │               │   │       └── <expression>
+│       │   │               │   │           └── <simple-expression>
+│       │   │               │   │               ├── <term>
+│       │   │               │   │               │   └── <factor>
+│       │   │               │   │               │       └── <variable>
+│       │   │               │   │               │           └── ident(total)
+│       │   │               │   │               ├── <additive-operator>
+│       │   │               │   │               │   └── plus
+│       │   │               │   │               └── <term>
+│       │   │               │   │                   └── <factor>
+│       │   │               │   │                       └── <variable>
+│       │   │               │   │                           └── ident(i)
+│       │   │               │   ├── semicolon
+│       │   │               │   └── <statement>
+│       │   │               │       └── <procedure/function-call>
+│       │   │               │           ├── ident(writeln)
+│       │   │               │           ├── lparent
+│       │   │               │           ├── <parameter-list>
+│       │   │               │           │   └── <expression>
+│       │   │               │           │       └── <simple-expression>
+│       │   │               │           │           └── <term>
+│       │   │               │           │               └── <factor>
+│       │   │               │           │                   └── <variable>
+│       │   │               │           │                       └── ident(i)
+│       │   │               │           └── rparent
+│       │   │               └── endsy
+│       │   ├── semicolon
+│       │   └── <statement>
+│       │       └── <procedure/function-call>
+│       │           ├── ident(writeln)
+│       │           ├── lparent
+│       │           ├── <parameter-list>
+│       │           │   └── <expression>
+│       │           │       └── <simple-expression>
+│       │           │           └── <term>
+│       │           │               └── <factor>
+│       │           │                   └── <variable>
+│       │           │                       └── ident(total)
+│       │           └── rparent
+│       └── endsy
+└── period
+
+--- ABSTRACT SYNTAX TREE ---
+ProgramNode(name: 'ForLoop')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'total')
+      TypeName(integer)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('total')
+        value:
+          IntegerNumber(0)
+      For(iterator: 'i', direction: 'to')
+        start:
+          IntegerNumber(1)
+        end:
+          IntegerNumber(10)
+        body:
+          BlockNode
+            Assign
+              target:
+                Var('total')
+              value:
+                BinOp('+')
+                  Var('total')
+                  Var('i')
+            ProcedureCall(name: 'writeln')
+              Var('i')
+      ProcedureCall(name: 'writeln')
+        Var('total')
+
+--- DECORATED AST ---
+ProgramNode(name: 'ForLoop')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'total')
+      TypeName(integer)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('total' : integer [tab=44, lev=0])
+        value:
+          IntegerNumber(0 : integer)
+      For(iterator: 'i', direction: 'to')
+        start:
+          IntegerNumber(1 : integer)
+        end:
+          IntegerNumber(10 : integer)
+        body:
+          BlockNode
+            Assign
+              target:
+                Var('total' : integer [tab=44, lev=0])
+              value:
+                BinOp('+' : integer)
+                  Var('total' : integer [tab=44, lev=0])
+                  Var('i' : integer [tab=43, lev=0])
+            ProcedureCall(name: 'writeln')
+              Var('i' : integer [tab=43, lev=0])
+      ProcedureCall(name: 'writeln')
+        Var('total' : integer [tab=44, lev=0])
