@@ -1,81 +1,53 @@
 --- ABSTRACT SYNTAX TREE ---
-ProgramNode(name: 'BasicTypes')
+ProgramNode(name: 'EnumTest')
   Declarations
-    VarDecl(name: 'i')
-      TypeName(integer)
-    VarDecl(name: 'r')
-      TypeName(real)
+    TypeDecl(name: 'Color')
+      EnumType(red, green, blue)
     VarDecl(name: 'c')
-      TypeName(char)
-    VarDecl(name: 'b')
-      TypeName(boolean)
+      TypeName(Color)
   Block
     BlockNode
-      Assign
-        target:
-          Var('i')
-        value:
-          IntegerNumber(42)
-      Assign
-        target:
-          Var('r')
-        value:
-          RealNumber(3.14)
       Assign
         target:
           Var('c')
         value:
-          Char('A')
-      Assign
-        target:
-          Var('b')
-        value:
-          Var('true')
-      Assign
-        target:
-          Var('r')
-        value:
-          Var('i')
+          Var('red')
+      If
+        condition:
+          BinOp('==')
+            Var('c')
+            Var('green')
+        then:
+          BlockNode
+            ProcedureCall(name: 'writeln')
+              String('green')
+            Empty
       Empty
 
 --- DECORATED AST ---
-ProgramNode(name: 'BasicTypes')
+ProgramNode(name: 'EnumTest')
   Declarations
-    VarDecl(name: 'i')
-      TypeName(integer)
-    VarDecl(name: 'r')
-      TypeName(real)
+    TypeDecl(name: 'Color')
+      EnumType(red, green, blue)
     VarDecl(name: 'c')
-      TypeName(char)
-    VarDecl(name: 'b')
-      TypeName(boolean)
+      TypeName(Color)
   Block
     BlockNode
       Assign
         target:
-          Var('i' : integer [tab=43, lev=0])
+          Var('c' : enum [tab=47, lev=0])
         value:
-          IntegerNumber(42 : integer)
-      Assign
-        target:
-          Var('r' : real [tab=44, lev=0])
-        value:
-          RealNumber(3.14 : real)
-      Assign
-        target:
-          Var('c' : char [tab=45, lev=0])
-        value:
-          Char('A' : char)
-      Assign
-        target:
-          Var('b' : boolean [tab=46, lev=0])
-        value:
-          Var('true' : boolean [tab=38, lev=0])
-      Assign
-        target:
-          Var('r' : real [tab=44, lev=0])
-        value:
-          Var('i' : integer [tab=43, lev=0])
+          Var('red' : enum [tab=44, lev=0])
+      If
+        condition:
+          BinOp('==' : boolean)
+            Var('c' : enum [tab=47, lev=0])
+            Var('green' : enum [tab=45, lev=0])
+        then:
+          BlockNode
+            ProcedureCall(name: 'writeln')
+              String('green' : string)
+            Empty
       Empty
 
 
@@ -123,8 +95,9 @@ IDX  IDENT          LINK      OBJ       TYPE      REF       NRM       LEV       
 39   false          38        0         4         0         1         0         0         
 40   writeln        39        3         0         0         1         0         0         
 41   readln         40        3         0         0         1         0         0         
-42   basictypes     41        5         0         0         1         0         0         
-43   i              42        1         1         0         1         0         0         
-44   r              43        1         2         0         1         0         0         
-45   c              44        1         3         0         1         0         0         
-46   b              45        1         4         0         1         0         0         
+42   enumtest       41        5         0         0         1         0         0         
+43   color          42        2         9         0         1         0         0         
+44   red            43        0         9         0         1         0         0         
+45   green          44        0         9         0         1         0         1         
+46   blue           45        0         9         0         1         0         2         
+47   c              46        1         9         0         1         0         0         

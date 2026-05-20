@@ -58,6 +58,7 @@ private:
     TypeCode resolveType(ParseNode *typeNode);
     TypeCode resolveTypeName(const std::string &name);
     int registerArrayType(ParseNode *typeNode);
+    int registerRecordType(ParseNode *typeNode);
 
     // Constants
     ASTPtr visitConstant(ParseNode *node);

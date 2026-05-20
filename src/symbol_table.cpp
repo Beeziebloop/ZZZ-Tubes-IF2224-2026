@@ -288,4 +288,4 @@ void SymbolTable::printAtab() const
              << setw(10) << e.size
              << endl;
     }
-};
+}

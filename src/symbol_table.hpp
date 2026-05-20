@@ -28,7 +28,8 @@ enum TypeCode
     TYPE_STRING,
     TYPE_ARRAY,
     TYPE_RECORD,
-    TYPE_SUBRANGE
+    TYPE_SUBRANGE,
+    TYPE_ENUM
 };
 
 // Struct untuk satu entri tab

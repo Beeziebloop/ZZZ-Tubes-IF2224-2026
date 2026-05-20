@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <utility>
 
+//entry point builder, validasi root dilakukan disini agar error lebih jelas kalau parser gagal
 ASTPtr ASTBuilder::build(ParseNode* root) {
     if (!root) {
         throw std::runtime_error("ASTBuilder error: parse tree root is null");
@@ -13,15 +14,18 @@ ASTPtr ASTBuilder::build(ParseNode* root) {
     return buildAny(root);
 }
 
+//mengecek apakah node parse tree punya label nonterminal tertentu
 bool ASTBuilder::isLabel(ParseNode* node, const std::string& label) const {
     return node && node->label == label;
 }
 
+//terminal disini itu token lexer, and in this case label terminal tidak diawali karakter <
 bool ASTBuilder::isTerminal(ParseNode* node) const {
     if (!node) return false;
     return !node->label.empty() && node->label.front() != '<';
 }
 
+//helper prefix string, disiapkan buat grammar/token yang butuh pengecekan awalan
 bool ASTBuilder::startsWith(const std::string& s, const std::string& prefix) const {
     return s.rfind(prefix, 0) == 0;
 }
@@ -61,6 +65,7 @@ std::string ASTBuilder::terminalValue(ParseNode* node) const {
     return value;
 }
 
+//normalisasi ident/keyword ke lowercase karena Pascal-like language biasanya case-insensitive
 std::string ASTBuilder::lower(std::string s) const {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
@@ -68,6 +73,7 @@ std::string ASTBuilder::lower(std::string s) const {
     return s;
 }
 
+//ngambil child langsung pertama dengan label tertentu
 ParseNode* ASTBuilder::child(ParseNode* node, const std::string& label) const {
     if (!node) return nullptr;
 
@@ -78,6 +84,7 @@ ParseNode* ASTBuilder::child(ParseNode* node, const std::string& label) const {
     return nullptr;
 }
 
+//ngambil semua child langsung dengan label tertentu
 std::vector<ParseNode*> ASTBuilder::children(ParseNode* node, const std::string& label) const {
     std::vector<ParseNode*> result;
 
@@ -90,6 +97,7 @@ std::vector<ParseNode*> ASTBuilder::children(ParseNode* node, const std::string&
     return result;
 }
 
+//nyari terminal pertama dengan nama token tertentu secara dfs
 ParseNode* ASTBuilder::firstTerminal(ParseNode* node, const std::string& terminal) const {
     if (!node) return nullptr;
 
@@ -105,12 +113,14 @@ ParseNode* ASTBuilder::firstTerminal(ParseNode* node, const std::string& termina
     return nullptr;
 }
 
+//ngambil semua terminal dengan nama tertentu dari subtree
 std::vector<ParseNode*> ASTBuilder::allTerminals(ParseNode* node, const std::string& terminal) const {
     std::vector<ParseNode*> result;
     collectTerminals(node, terminal, result);
     return result;
 }
 
+//helper rekursif untuk allTerminals
 void ASTBuilder::collectTerminals(ParseNode* node, const std::string& terminal, std::vector<ParseNode*>& out) const {
     if (!node) return;
 
@@ -123,10 +133,12 @@ void ASTBuilder::collectTerminals(ParseNode* node, const std::string& terminal, 
     }
 }
 
+//cek keberadaan terminal tertentu dalam subtree
 bool ASTBuilder::containsTerminal(ParseNode* node, const std::string& terminal) const {
     return firstTerminal(node, terminal) != nullptr;
 }
 
+//mindahin isi vector ASTPtr tanpa copy since unique ptr gabisa dicopy
 void ASTBuilder::moveAppend(std::vector<ASTPtr>& dst, std::vector<ASTPtr>& src) {
     for (auto& item : src) {
         dst.push_back(std::move(item));
@@ -134,6 +146,7 @@ void ASTBuilder::moveAppend(std::vector<ASTPtr>& dst, std::vector<ASTPtr>& src) 
     src.clear();
 }
 
+//
 ASTPtr ASTBuilder::buildAny(ParseNode* node) {
     if (!node) return nullptr;
 
@@ -147,6 +160,7 @@ ASTPtr ASTBuilder::buildAny(ParseNode* node) {
     if (node->label == "<while-statement>") return buildWhile(node);
     if (node->label == "<repeat-statement>") return buildRepeat(node);
     if (node->label == "<for-statement>") return buildFor(node);
+    if (node->label == "<case-statement>") return buildCase(node);
     if (node->label == "<procedure/function-call>") return buildProcedureFunctionCall(node);
     if (node->label == "<expression>") return buildExpression(node);
     if (node->label == "<simple-expression>") return buildSimpleExpression(node);
@@ -162,6 +176,7 @@ ASTPtr ASTBuilder::buildAny(ParseNode* node) {
     return nullptr;
 }
 
+//bangun root ProgramNode: nama program, deklarasi global, dan block utama
 //<program> -> <program_header> <declaration_part> <block> period
 ASTPtr ASTBuilder::buildProgram(ParseNode* node) {
     ParseNode* header = child(node, "<program_header>");
@@ -183,6 +198,7 @@ ASTPtr ASTBuilder::buildProgram(ParseNode* node) {
     );
 }
 
+//ngegabungin semua jenis deklarasi dalam urutan source code
 std::vector<ASTPtr> ASTBuilder::buildDeclarationPart(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -207,6 +223,7 @@ std::vector<ASTPtr> ASTBuilder::buildDeclarationPart(ParseNode* node) {
     return result;
 }
 
+//konversi const declaration jadi daftar ConstDeclNode
 std::vector<ASTPtr> ASTBuilder::buildConstDecl(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -229,6 +246,7 @@ std::vector<ASTPtr> ASTBuilder::buildConstDecl(ParseNode* node) {
     return result;
 }
 
+//konversi type declaration jadi daftar TypeDeclNode
 std::vector<ASTPtr> ASTBuilder::buildTypeDecl(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -251,6 +269,7 @@ std::vector<ASTPtr> ASTBuilder::buildTypeDecl(ParseNode* node) {
     return result;
 }
 
+//konversi var declaration dengan identifier list dipecah jadi satu VarDeclNode per nama
 std::vector<ASTPtr> ASTBuilder::buildVarDecl(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -275,6 +294,7 @@ std::vector<ASTPtr> ASTBuilder::buildVarDecl(ParseNode* node) {
     return result;
 }
 
+//wrapper buat procedure/function declaration
 std::vector<ASTPtr> ASTBuilder::buildSubprogramDecl(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -289,6 +309,7 @@ std::vector<ASTPtr> ASTBuilder::buildSubprogramDecl(ParseNode* node) {
     return result;
 }
 
+//bangun ProcedureDeclNode lengkap dengan parameter, deklarasi lokal, dan body
 ASTPtr ASTBuilder::buildProcedureDecl(ParseNode* node) {
     ParseNode* ident = firstTerminal(node, "ident");
     std::string name = ident ? terminalValue(ident) : "<anonymous-procedure>";
@@ -301,8 +322,17 @@ ASTPtr ASTBuilder::buildProcedureDecl(ParseNode* node) {
     std::vector<ASTPtr> declarations;
     ASTPtr blockNode = nullptr;
 
+    //pada subprogram, <block> bisa ada declaration part lokal sebelum compound statement
+    //deklarasi lokal itu disimpan di ProcedureDeclNode biar scope procedure tetap jelas pas dianalisis
     if (ParseNode* blockParse = child(node, "<block>")) {
-        blockNode = buildBlock(blockParse);
+        if (ParseNode* declPart = child(blockParse, "<declaration_part>")) {
+            declarations = buildDeclarationPart(declPart);
+        }
+        if (ParseNode* compound = child(blockParse, "<compound-statement>")) {
+            blockNode = buildCompoundStatement(compound);
+        } else {
+            blockNode = buildBlock(blockParse);
+        }
     } else {
         blockNode = std::make_unique<BlockNode>(std::vector<ASTPtr>{});
     }
@@ -315,6 +345,7 @@ ASTPtr ASTBuilder::buildProcedureDecl(ParseNode* node) {
     );
 }
 
+//bangun FunctionDeclNode lengkap dengan return type, parameter, deklarasi lokal, dan body
 ASTPtr ASTBuilder::buildFunctionDecl(ParseNode* node) {
     ParseNode* ident = firstTerminal(node, "ident");
     std::string name = ident ? terminalValue(ident) : "<anonymous-function>";
@@ -334,9 +365,20 @@ ASTPtr ASTBuilder::buildFunctionDecl(ParseNode* node) {
 
     ASTPtr returnType = buildType(returnTypeParse);
 
+    std::vector<ASTPtr> declarations;
     ASTPtr blockNode = nullptr;
+
+    //sama kek procedure, deklarasi lokal function gaboleh hilang dari AST
     if (ParseNode* blockParse = child(node, "<block>")) {
-        blockNode = buildBlock(blockParse);
+        if (ParseNode* declPart = child(blockParse, "<declaration_part>")) {
+            declarations = buildDeclarationPart(declPart);
+        }
+
+        if (ParseNode* compound = child(blockParse, "<compound-statement>")) {
+            blockNode = buildCompoundStatement(compound);
+        } else {
+            blockNode = buildBlock(blockParse);
+        }
     } else {
         blockNode = std::make_unique<BlockNode>(std::vector<ASTPtr>{});
     }
@@ -345,11 +387,12 @@ ASTPtr ASTBuilder::buildFunctionDecl(ParseNode* node) {
         name,
         std::move(params),
         std::move(returnType),
-        std::vector<ASTPtr>{},
+        std::move(declarations),
         std::move(blockNode)
     );
 }
 
+//ngegabungin semua grup param formal
 std::vector<ASTPtr> ASTBuilder::buildFormalParams(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -365,23 +408,28 @@ std::vector<ASTPtr> ASTBuilder::buildFormalParams(ParseNode* node) {
     return result;
 }
 
+//satu param group itu bisa punya banyak ident dengan tipe dan mode yang sama
 std::vector<ASTPtr> ASTBuilder::buildParamGroup(ParseNode* node) {
     std::vector<ASTPtr> result;
 
     ParseNode* idList = child(node, "<identifier_list>");
     ParseNode* typeNode = child(node, "<type>");
 
+    //keyword varsy/var menandai parameter by-reference dan info ini penting karena nanti SymbolTable.nrm harus bernilai 0 untuk var parameter
+    bool byReference = containsTerminal(node, "varsy") || containsTerminal(node, "var");
+
     for (const std::string& name : identifierList(idList)) {
         result.push_back(std::make_unique<ParamDeclNode>(
             name,
             buildType(typeNode),
-            false
+            byReference
         ));
     }
 
     return result;
 }
 
+//ngubah subtree <type> jadi node tipe AST
 ASTPtr ASTBuilder::buildType(ParseNode* node) {
     if (!node) return std::make_unique<TypeNameNode>("<unknown-type>");
 
@@ -397,6 +445,10 @@ ASTPtr ASTBuilder::buildType(ParseNode* node) {
         return buildEnumerated(enumerated);
     }
 
+    if (ParseNode* range = child(node, "<range>")) {
+        return buildRange(range);
+    }
+
     if (ParseNode* ident = firstTerminal(node, "ident")) {
         return std::make_unique<TypeNameNode>(terminalValue(ident));
     }
@@ -404,6 +456,7 @@ ASTPtr ASTBuilder::buildType(ParseNode* node) {
     return std::make_unique<TypeNameNode>("<unknown-type>");
 }
 
+//bangun ArrayTypeNode dengan index range dan element type
 ASTPtr ASTBuilder::buildArrayType(ParseNode* node) {
     ASTPtr indexType = buildRange(child(node, "<range>"));
 
@@ -421,6 +474,7 @@ ASTPtr ASTBuilder::buildArrayType(ParseNode* node) {
     );
 }
 
+//bangun RangeTypeNode dari low dan high constant
 ASTPtr ASTBuilder::buildRange(ParseNode* node) {
     if (!node) return std::make_unique<TypeNameNode>("<unknown-range>");
 
@@ -435,6 +489,7 @@ ASTPtr ASTBuilder::buildRange(ParseNode* node) {
     );
 }
 
+//bangun EnumTypeNode dari daftar identifier enumerasi
 ASTPtr ASTBuilder::buildEnumerated(ParseNode* node) {
     std::vector<std::string> names;
 
@@ -445,6 +500,7 @@ ASTPtr ASTBuilder::buildEnumerated(ParseNode* node) {
     return std::make_unique<EnumTypeNode>(std::move(names));
 }
 
+//bangun RecordTypeNode dimana tiap field disimpan sebagai VarDeclNode
 ASTPtr ASTBuilder::buildRecordType(ParseNode* node) {
     std::vector<ASTPtr> fields;
 
@@ -455,6 +511,7 @@ ASTPtr ASTBuilder::buildRecordType(ParseNode* node) {
     return std::make_unique<RecordTypeNode>(std::move(fields));
 }
 
+//gabungin semua field part pada record
 std::vector<ASTPtr> ASTBuilder::buildFieldList(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -470,6 +527,7 @@ std::vector<ASTPtr> ASTBuilder::buildFieldList(ParseNode* node) {
     return result;
 }
 
+//satu field part itu bisa punya banyak field dengan tipe yang sama
 std::vector<ASTPtr> ASTBuilder::buildFieldPart(ParseNode* node) {
     std::vector<ASTPtr> result;
 
@@ -486,6 +544,7 @@ std::vector<ASTPtr> ASTBuilder::buildFieldPart(ParseNode* node) {
     return result;
 }
 
+//ngubah const literal/ident jadi Num/String/Char/Boolean/VarNode
 ASTPtr ASTBuilder::buildConstant(ParseNode* node) {
     if (!node) return nullptr;
 
@@ -526,6 +585,7 @@ ASTPtr ASTBuilder::buildConstant(ParseNode* node) {
     return nullptr;
 }
 
+//bangun block utama, deklarasi lokal ditangani di node procedure/func
 ASTPtr ASTBuilder::buildBlock(ParseNode* node) {
     if (!node) return std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 
@@ -536,6 +596,7 @@ ASTPtr ASTBuilder::buildBlock(ParseNode* node) {
     return std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 }
 
+//compound statement begin...end dipadetin jadi BlockNode berisi statement list
 ASTPtr ASTBuilder::buildCompoundStatement(ParseNode* node) {
     if (!node) return std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 
@@ -546,6 +607,7 @@ ASTPtr ASTBuilder::buildCompoundStatement(ParseNode* node) {
     return std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 }
 
+//statement list jadi BlockNode biar urutan eksekusi tetep terjaga
 ASTPtr ASTBuilder::buildStatementList(ParseNode* node) {
     std::vector<ASTPtr> statements;
 
@@ -560,6 +622,7 @@ ASTPtr ASTBuilder::buildStatementList(ParseNode* node) {
     return std::make_unique<BlockNode>(std::move(statements));
 }
 
+//dispatcher statement, empty statement dikembalikan sebagai EmptyNode
 ASTPtr ASTBuilder::buildStatement(ParseNode* node) {
     if (!node) return std::make_unique<EmptyNode>();
 
@@ -571,11 +634,13 @@ ASTPtr ASTBuilder::buildStatement(ParseNode* node) {
         if (ch->label == "<while-statement>") return buildWhile(ch);
         if (ch->label == "<repeat-statement>") return buildRepeat(ch);
         if (ch->label == "<for-statement>") return buildFor(ch);
+        if (ch->label == "<case-statement>") return buildCase(ch);
     }
 
     return std::make_unique<EmptyNode>();
 }
 
+//assignment statement jadi AssignNode(target, value)
 ASTPtr ASTBuilder::buildAssignment(ParseNode* node) {
     ParseNode* variable = child(node, "<variable>");
     ParseNode* expr = child(node, "<expression>");
@@ -586,6 +651,7 @@ ASTPtr ASTBuilder::buildAssignment(ParseNode* node) {
     );
 }
 
+//if statement nyimpen condition, then branch, dan else branch (optional)
 ASTPtr ASTBuilder::buildIf(ParseNode* node) {
     ParseNode* conditionParse = child(node, "<expression>");
     auto statementNodes = children(node, "<statement>");
@@ -606,14 +672,16 @@ ASTPtr ASTBuilder::buildIf(ParseNode* node) {
     );
 }
 
+//while statement nyimpen condition dan body statement
 ASTPtr ASTBuilder::buildWhile(ParseNode* node) {
     ParseNode* conditionParse = child(node, "<expression>");
 
     ASTPtr body;
-    if (ParseNode* stmtParse = child(node, "<statement>"))
-        body = buildStatement(stmtParse);
-    else if (ParseNode* compoundParse = child(node, "<compound-statement>"))
+    //body while harus pake compound-statement sesuai revisi m3
+    if (ParseNode* compoundParse = child(node, "<compound-statement>"))
         body = buildCompoundStatement(compoundParse);
+    else if (ParseNode* stmtParse = child(node, "<statement>"))
+        body = buildStatement(stmtParse); //fallback ke <statement> dipertahankan jika parse tree lama masih dipakai biar builder kompatible (just in case)
     else
         body = std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 
@@ -623,6 +691,7 @@ ASTPtr ASTBuilder::buildWhile(ParseNode* node) {
     );
 }
 
+//repeat nyimpen body statement list dan kondisi until
 ASTPtr ASTBuilder::buildRepeat(ParseNode* node) {
     ParseNode* bodyParse = child(node, "<statement-list>");
     ParseNode* conditionParse = child(node, "<expression>");
@@ -633,6 +702,7 @@ ASTPtr ASTBuilder::buildRepeat(ParseNode* node) {
     );
 }
 
+//for nyimpen iterator, start/end expression, direction (downto/upto), dan body statement
 ASTPtr ASTBuilder::buildFor(ParseNode* node) {
     ParseNode* ident = firstTerminal(node, "ident");
     auto exprs = children(node, "<expression>");
@@ -643,10 +713,11 @@ ASTPtr ASTBuilder::buildFor(ParseNode* node) {
     ASTPtr endExpr = exprs.size() >= 2 ? buildExpression(exprs[1]) : nullptr;
 
     ASTPtr body;
-    if (ParseNode* stmtParse = child(node, "<statement>"))
-        body = buildStatement(stmtParse);
-    else if (ParseNode* compoundParse = child(node, "<compound-statement>"))
+    // body for wajib pake compound-statement sesuai revisi m3
+    if (ParseNode* compoundParse = child(node, "<compound-statement>"))
         body = buildCompoundStatement(compoundParse);
+    else if (ParseNode* stmtParse = child(node, "<statement>"))
+        body = buildStatement(stmtParse); //fallback ke <statement> dipertahankan jika parse tree lama masih dipakai biar builder kompatible (just in case)
     else
         body = std::make_unique<BlockNode>(std::vector<ASTPtr>{});
 
@@ -659,6 +730,50 @@ ASTPtr ASTBuilder::buildFor(ParseNode* node) {
     );
 }
 
+//case-statement menyimpan 2 informasi utama:
+//1. selector: ekspresi setelah keyword case
+//2. arms: kumpulan cabang case, masing-masing punya label dan body statement
+ASTPtr ASTBuilder::buildCase(ParseNode* node) {
+    if (!node) return std::make_unique<EmptyNode>();
+
+    ParseNode* selectorParse = child(node, "<expression>");
+    ASTPtr selector = buildExpression(selectorParse);
+
+    std::vector<ASTPtr> arms;
+
+    //case dibentuk dari <case-block> yang rekursif, dan karena bentuknya rekursif kita iterasi dari case-block pertama lalu ke nested jika ada
+    ParseNode* caseBlock = child(node, "<case-block>");
+    while (caseBlock) {
+        std::vector<ASTPtr> labels;
+        ParseNode* stmtParse = nullptr;
+        ParseNode* nextBlock = nullptr;
+
+        for (ParseNode* ch : caseBlock->children) {
+            if (ch->label == "<constant>") {
+                labels.push_back(buildConstant(ch));
+            } else if (ch->label == "<statement>") {
+                stmtParse = ch;
+            } else if (ch->label == "<case-block>") {
+                nextBlock = ch;
+            }
+        }
+
+        ASTPtr body = stmtParse ? buildStatement(stmtParse) : std::make_unique<EmptyNode>();
+        arms.push_back(std::make_unique<CaseArmNode>(
+            std::move(labels),
+            std::move(body)
+        ));
+
+        caseBlock = nextBlock;
+    }
+
+    return std::make_unique<CaseNode>(
+        std::move(selector),
+        std::move(arms)
+    );
+}
+
+//procedure/func call nyimpen nama dan daftar argument expression
 ASTPtr ASTBuilder::buildProcedureFunctionCall(ParseNode* node) {
     ParseNode* ident = firstTerminal(node, "ident");
     std::string name = ident ? terminalValue(ident) : "<call>";
@@ -679,6 +794,7 @@ ASTPtr ASTBuilder::buildProcedureFunctionCall(ParseNode* node) {
     );
 }
 
+//expression nanganin relasi: simple-expression [relop simple-expression]
 ASTPtr ASTBuilder::buildExpression(ParseNode* node) {
     if (!node) return nullptr;
 
@@ -705,6 +821,7 @@ ASTPtr ASTBuilder::buildExpression(ParseNode* node) {
     return result;
 }
 
+//simple expression nanganin unary minus dan additive operator secara left-associative
 ASTPtr ASTBuilder::buildSimpleExpression(ParseNode* node) {
     if (!node) return nullptr;
 
@@ -742,6 +859,7 @@ ASTPtr ASTBuilder::buildSimpleExpression(ParseNode* node) {
     return result;
 }
 
+//term nanganin multiplicative operator secara left-associative
 ASTPtr ASTBuilder::buildTerm(ParseNode* node) {
     if (!node) return nullptr;
 
@@ -769,6 +887,7 @@ ASTPtr ASTBuilder::buildTerm(ParseNode* node) {
     return result;
 }
 
+//factor adalah unit ekspresi: literal, variable, call, parenthesized expression, atau not factor
 ASTPtr ASTBuilder::buildFactor(ParseNode* node) {
     if (!node) return nullptr;
 
@@ -807,6 +926,7 @@ ASTPtr ASTBuilder::buildFactor(ParseNode* node) {
     return nullptr;
 }
 
+//var dimulai dari identifier lalu komponen array/record yang optional diterapkan berurutan
 ASTPtr ASTBuilder::buildVariable(ParseNode* node) {
     if (!node) return nullptr;
 
@@ -824,6 +944,7 @@ ASTPtr ASTBuilder::buildVariable(ParseNode* node) {
     return result;
 }
 
+//nerapin component variable: array access atau field access ke base variable
 ASTPtr ASTBuilder::applyComponent(ASTPtr base, ParseNode* componentNode) {
     if (!componentNode) return base;
 
@@ -847,15 +968,19 @@ ASTPtr ASTBuilder::applyComponent(ASTPtr base, ParseNode* componentNode) {
     return base;
 }
 
+//index list diubah jadi expression list biar index bisa berupa ekspresi, bukan hanya token literal
 std::vector<ASTPtr> ASTBuilder::buildIndexList(ParseNode* node) {
     std::vector<ASTPtr> result;
 
     if (!node) return result;
 
+    //karena umumnya index array bisa berupa expression (ex: a[i + 1]), prioritas pertama adalah mengambil child <expression>, bukan hanya token ident/intcon 
     for (ParseNode* ch : node->children) {
-        if (isTerminal(ch)) {
+        if (ch->label == "<expression>") {
+            result.push_back(buildExpression(ch));
+        } else if (isTerminal(ch)) {
+            //fallback untuk grammar index-list yang langsung berisi terminal sederhana
             std::string name = terminalName(ch);
-
             if (name == "intcon") {
                 result.push_back(std::make_unique<NumNode>(terminalValue(ch), false));
             } else if (name == "charcon") {
@@ -872,6 +997,7 @@ std::vector<ASTPtr> ASTBuilder::buildIndexList(ParseNode* node) {
     return result;
 }
 
+//ngubah token operator parser jadi string operator yang lebih mudah dicek semantic analyzer
 std::string ASTBuilder::operatorFromNode(ParseNode* node) const {
     if (!node) return "?";
 
@@ -904,6 +1030,7 @@ std::string ASTBuilder::operatorFromNode(ParseNode* node) const {
     return "?";
 }
 
+//ngambil semua ident dari identifier_list
 std::vector<std::string> ASTBuilder::identifierList(ParseNode* node) const {
     std::vector<std::string> result;
 

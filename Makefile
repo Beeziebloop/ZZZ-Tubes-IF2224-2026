@@ -24,7 +24,15 @@ $(TARGET): $(SRCS)
 # Run lexer: make run INPUT=test/milestone-2/input-1.txt
 # Output akan otomatis dibuat sebagai output-1.txt di folder yang sama
 run: all
-	./$(TARGET) $(INPUT) $(dir $(INPUT))$(subst input-,output-,$(notdir $(INPUT)))
+	@if echo "$(INPUT)" | grep -q "milestone-1"; then \
+		./$(TARGET) $(INPUT) $(dir $(INPUT))$(subst input-,output-,$(notdir $(INPUT))) --m1; \
+	elif echo "$(INPUT)" | grep -q "milestone-2"; then \
+		./$(TARGET) $(INPUT) $(dir $(INPUT))$(subst input-,output-,$(notdir $(INPUT))) --m2; \
+	elif echo "$(INPUT)" | grep -q "milestone-3"; then \
+		./$(TARGET) $(INPUT) $(dir $(INPUT))$(subst input-,output-,$(notdir $(INPUT))) --m3; \
+	else \
+		./$(TARGET) $(INPUT) $(dir $(INPUT))$(subst input-,output-,$(notdir $(INPUT))); \
+	fi
 
 # Run dengan token output file: make runout INPUT=... OUTPUT=...
 runout: all
@@ -68,31 +76,41 @@ test2-5: all
 # Shortcut test milestone 3 semua input sekaligus (full output)
 test3: all
 	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --full
-	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --full
-	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --full
-	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --full
-	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --full
+	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --m3
+	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --m3
+	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --m3
+	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --m3
+	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --m3
+	./$(TARGET) test/milestone-3/input-6.txt test/milestone-3/output-6.txt --m3
+	./$(TARGET) test/milestone-3/input-7.txt test/milestone-3/output-7.txt --m3
 
 test3-1: all
 	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --full
+	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --m3
 
 test3-2: all
 	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --full
+	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --m3
 
 test3-3: all
 	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --full
+	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --m3
 
 test3-4: all
 	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --full
+	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --m3
 
 test3-5: all
 	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --full
+	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --m3
+
+test3-6: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-6.txt test/milestone-3/output-6.txt --m3
+
+test3-7: all
+	mkdir -p test/milestone-3
+	./$(TARGET) test/milestone-3/input-7.txt test/milestone-3/output-7.txt --m3
 
 # Bersihkan hasil kompilasi
 clean:

@@ -8,165 +8,176 @@
 #include <vector>
 #include <memory>
 
-void writeTokens(const std::vector<Token>& tokens, const Lexer& lexer, std::ostream& out) {
+using namespace std;
+
+void writeTokens(const vector<Token>& tokens,
+                 const Lexer& lexer,
+                 ostream& out)
+{
     for (const Token& tok : tokens) {
-        if (tok.type == EOF_TOKEN) break;
+        if (tok.type == EOF_TOKEN)
+            break;
+
         if (tok.type == BLANK_LINE) {
             out << "\n";
             continue;
         }
+
         out << lexer.tokenToString(tok) << "\n";
     }
 }
 
-int main(int argc, char* argv[]) {
+void writeFullOutput(const vector<Token>& tokens,
+                     const Lexer& lexer,
+                     ParseNode* tree,
+                     Parser& parser,
+                     ostream& out)
+{
+    out << "--- TOKENS ---\n";
+    writeTokens(tokens, lexer, out);
+
+    out << "\n--- PARSE TREE ---\n";
+    parser.printTree(tree, out);
+
+    out << "\n--- ABSTRACT SYNTAX TREE ---\n";
+    ASTBuilder astBuilder;
+    ASTPtr ast = astBuilder.build(tree);
+    if (ast)
+        ast->print(out);
+    else
+        out << "AST gagal dibentuk.\n";
+
+    out << "\n--- DECORATED AST ---\n";
+    SemanticAnalyzer semanalyzer;
+    ASTPtr decoratedAst = semanalyzer.analyze(tree);
+    if (decoratedAst)
+        decoratedAst->print(out);
+    else
+        out << "Decorated AST gagal dibentuk.\n";
+
+    semanalyzer.symtab.printTab();
+    semanalyzer.symtab.printBtab();
+    semanalyzer.symtab.printAtab();
+}
+
+int main(int argc, char* argv[])
+{
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0]
-                  << " <input.txt> [output.txt] [--full]"
-                  << " or <input.txt> <token_output.txt> <parse_tree_output.txt>"
-                  << std::endl;
+        cerr << "Usage: " << argv[0]
+             << " <input.txt> [output.txt] "
+             << "[--m1 | --m2 | --m3 | --full]"
+             << endl;
         return 1;
     }
 
-    // Cek flag --full
     bool fullMode = false;
+    bool m1Mode = false;
+    bool m2Mode = false;
+    bool m3Mode = false;
+
     for (int i = 1; i < argc; i++) {
-        if (std::string(argv[i]) == "--full") {
+        string arg = argv[i];
+
+        if (arg == "--full")
             fullMode = true;
-        }
+        if (arg == "--m1")
+            m1Mode = true;
+        if (arg == "--m2")
+            m2Mode = true;
+        if (arg == "--m3")
+            m3Mode = true;
     }
 
     try {
-        /* Lexical Analysis */
         Lexer lexer(argv[1]);
-        std::vector<Token> tokens = lexer.tokenize();
+        vector<Token> tokens = lexer.tokenize();
 
-        /* Tulis token ke terminal */
-        writeTokens(tokens, lexer, std::cout);
+        Parser parser(tokens);
+        unique_ptr<ParseNode> tree(parser.parse());
 
-        /* Mode --full: tulis semua section ke satu output file */
-        if (fullMode && argc >= 3) {
-            std::ofstream fullOut(argv[2]);
-            if (!fullOut.is_open()) {
-                std::cerr << "Error: Tidak bisa membuka file output: " << argv[2] << std::endl;
+        // Terminal selalu full output dari M1 sampai M3.
+        writeFullOutput(tokens, lexer, tree.get(), parser, cout);
+
+        if (m1Mode && argc >= 3) {
+            ofstream out(argv[2]);
+            if (!out.is_open()) {
+                cerr << "Error membuka file output: " << argv[2] << endl;
                 return 1;
             }
 
-            writeTokens(tokens, lexer, fullOut);
+            writeTokens(tokens, lexer, out);
+            return 0;
+        }
 
-            fullOut << "\n--- PARSE TREE ---\n";
-            Parser parser(tokens);
-            std::unique_ptr<ParseNode> tree(parser.parse());
-            parser.printTree(tree.get(), std::cout);
-            parser.printTree(tree.get(), fullOut);
+        if (m2Mode && argc >= 3) {
+            ofstream out(argv[2]);
+            if (!out.is_open()) {
+                cerr << "Error membuka file output: " << argv[2] << endl;
+                return 1;
+            }
 
-            fullOut << "\n--- ABSTRACT SYNTAX TREE ---\n";
-            std::cout << "\n--- ABSTRACT SYNTAX TREE ---\n";
+            parser.printTree(tree.get(), out);
+            return 0;
+        }
+
+        if (m3Mode && argc >= 3) {
+            ofstream out(argv[2]);
+            if (!out.is_open()) {
+                cerr << "Error membuka file output: " << argv[2] << endl;
+                return 1;
+            }
+
+            out << "--- ABSTRACT SYNTAX TREE ---\n";
+
             ASTBuilder astBuilder;
             ASTPtr ast = astBuilder.build(tree.get());
-            if (ast) {
-                ast->print(std::cout);
-                ast->print(fullOut);
-            }
 
-            fullOut << "\n--- DECORATED AST ---\n";
-            std::cout << "\n--- DECORATED AST ---\n";
+            if (ast)
+                ast->print(out);
+            else
+                out << "AST gagal dibentuk.\n";
+
+            out << "\n--- DECORATED AST ---\n";
+
             SemanticAnalyzer semanalyzer;
             ASTPtr decoratedAst = semanalyzer.analyze(tree.get());
-            if (decoratedAst) {
-                decoratedAst->print(std::cout);
-                decoratedAst->print(fullOut);
-            }
 
-            // Symbol tables ke stdout saja (tidak ada ostream param)
+            if (decoratedAst)
+                decoratedAst->print(out);
+            else
+                out << "Decorated AST gagal dibentuk.\n";
+
+            out << "\n";
+
+            streambuf* oldBuffer = cout.rdbuf();
+            cout.rdbuf(out.rdbuf());
+
             semanalyzer.symtab.printTab();
-            semanalyzer.symtab.printBtab();
-            semanalyzer.symtab.printAtab();
+
+            cout.rdbuf(oldBuffer);
 
             return 0;
         }
 
-        /* Mode lama */
-        if (argc >= 4 && !fullMode) {
-            std::ofstream tokenOut(argv[2]);
-            if (!tokenOut.is_open()) {
-                std::cerr << "Error: Tidak bisa membuka file output token: "
-                          << argv[2] << std::endl;
+        if (fullMode && argc >= 3) {
+            ofstream out(argv[2]);
+            if (!out.is_open()) {
+                cerr << "Error membuka file output: " << argv[2] << endl;
                 return 1;
             }
 
-            writeTokens(tokens, lexer, tokenOut);
-            std::cerr << "Token output ditulis ke: " << argv[2] << std::endl;
+            writeFullOutput(tokens, lexer, tree.get(), parser, out);
+            return 0;
         }
+    }
 
-        /* Syntax Analysis  */
-        std::cout << "\n--- PARSE TREE ---\n";
-
-        Parser parser(tokens);
-
-        std::unique_ptr<ParseNode> tree(parser.parse());
-
-        /* Cetak parse tree ke terminal */
-        parser.printTree(tree.get(), std::cout);
-
-        /* Mode 2 args: tulis parse tree ke file output */
-        if (argc == 3 && !fullMode) {
-            std::ofstream treeOut(argv[2]);
-            if (!treeOut.is_open()) {
-                std::cerr << "Error: Tidak bisa membuka file output parse tree: "
-                          << argv[2] << std::endl;
-                return 1;
-            }
-
-            parser.printTree(tree.get(), treeOut);
-            std::cerr << "Parse tree output ditulis ke: " << argv[2] << std::endl;
-        }
-        /* Mode 3 args: tulis parse tree ke file output */
-        else if (argc >= 4 && !fullMode) {
-            std::ofstream treeOut(argv[3]);
-            if (!treeOut.is_open()) {
-                std::cerr << "Error: Tidak bisa membuka file output parse tree: "
-                          << argv[3] << std::endl;
-                return 1;
-            }
-
-            parser.printTree(tree.get(), treeOut);
-            std::cerr << "Parse tree output ditulis ke: " << argv[3] << std::endl;
-        }
-
-        /* AST Construction / Syntax-Directed Translation  */
-        std::cout << "\n--- ABSTRACT SYNTAX TREE ---\n";
-
-        ASTBuilder astBuilder;
-        ASTPtr ast = astBuilder.build(tree.get());
-
-        if (ast) {
-            ast->print(std::cout);
-        } else {
-            std::cerr << "Warning: AST tidak berhasil dibentuk.\n";
-        }
-
-        /* Semantic Analysis (Decorated AST + Symbol Tables)  */
-        std::cout << "\n--- DECORATED AST ---\n";
-
-        SemanticAnalyzer semanalyzer;
-        ASTPtr decoratedAst = semanalyzer.analyze(tree.get());
-
-        if (decoratedAst) {
-            decoratedAst->print(std::cout);
-        } else {
-            std::cerr << "Warning: Decorated AST tidak berhasil dibentuk.\n";
-        }
-
-        semanalyzer.symtab.printTab();
-        semanalyzer.symtab.printBtab();
-        semanalyzer.symtab.printAtab();
-
-    } catch (const ParseError& e) {
-        std::cerr << e.what() << std::endl;
+    catch (const ParseError& e) {
+        cerr << e.what() << endl;
         return 1;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    catch (const exception& e) {
+        cerr << "Error: " << e.what() << endl;
         return 1;
     }
 

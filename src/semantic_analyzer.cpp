@@ -298,6 +298,14 @@ TypeCode SemanticAnalyzer::resolveType(ParseNode *typeNode)
     if (child(typeNode, "<record_type>"))
         return TYPE_RECORD;
 
+    // Range pada spesifikasi adalah subrange, misalnya 1..10 atau 'a'..'z'
+    // Tipe ini tetap dibedakan dari integer biasa supaya symbol table bisa mencatat bahwa identifier tersebut berasal dari tipe range.
+    if (child(typeNode, "<range>"))
+        return TYPE_SUBRANGE;
+
+    if (child(typeNode, "<enumerated>"))
+        return TYPE_ENUM;
+
     if (ParseNode *ident = firstTerminal(typeNode, "ident"))
         return resolveTypeName(terminalValue(ident));
 
@@ -356,6 +364,8 @@ bool SemanticAnalyzer::isCompatible(TypeCode t1, TypeCode t2)
         return true;
     if ((t1 == TYPE_REAL && t2 == TYPE_INTEGER) || (t1 == TYPE_INTEGER && t2 == TYPE_REAL))
         return true;
+    if (t1 == TYPE_ENUM && t2 == TYPE_ENUM) 
+        return true;
     return false;
 }
 
@@ -366,6 +376,8 @@ bool SemanticAnalyzer::isRelationalCompatible(TypeCode t1, TypeCode t2)
     // integer dan real boleh dibandingkan satu sama lain
     if ((t1 == TYPE_INTEGER || t1 == TYPE_REAL) && (t2 == TYPE_INTEGER || t2 == TYPE_REAL))
         return true;
+    if (t1 == TYPE_ENUM && t2 == TYPE_ENUM)
+        return true;
     return false;
 }
 
@@ -374,6 +386,8 @@ bool SemanticAnalyzer::isAssignCompatible(TypeCode target, TypeCode value)
     if (target == value)
         return true;
     if (target == TYPE_REAL && value == TYPE_INTEGER)
+        return true;
+    if (target == TYPE_ENUM && value == TYPE_ENUM)
         return true;
     return false;
 }
@@ -449,6 +463,7 @@ string SemanticAnalyzer::typeCodeToString(TypeCode t)
     case TYPE_ARRAY:    return "array";
     case TYPE_RECORD:   return "record";
     case TYPE_SUBRANGE: return "subrange";
+    case TYPE_ENUM:     return "enum";
     default:            return "";
     }
 }
@@ -565,6 +580,15 @@ vector<ASTPtr> SemanticAnalyzer::visitTypeDecl(ParseNode *node)
 
         int idx = symtab.enter(name, OBJ_TYPE, typeCode, arrayRef, 1, 0);
         (void)idx;
+
+        if (typeCode == TYPE_ENUM) {
+            int ordinal = 0;
+            ParseNode* enumNode = child(typeParse, "<enumerated>");
+            for (ParseNode* identNode : allTerminals(enumNode, "ident")) {
+                symtab.enter(terminalValue(identNode), OBJ_CONSTANT, TYPE_ENUM, 0, 1, ordinal++);
+            }
+        }
+        
         result.push_back(make_unique<TypeDeclNode>(
             name,
             createTypeNode(typeParse)));
@@ -633,12 +657,17 @@ ASTPtr SemanticAnalyzer::visitProcDecl(ParseNode *node)
         params = visitFormalParams(formal);
 
     vector<ASTPtr> localDecls;
-    if (ParseNode *declPart = child(node, "<declaration_part>"))
-        localDecls = visitDeclarationPart(declPart);
-
     ASTPtr blockNode = make_unique<BlockNode>(vector<ASTPtr>{});
+
+    // Pada grammar milestone, declaration-part lokal berada di dalam <block>, bukan direct child dari <procedure_decl>
+    // Jadi harus masuk ke block terlebih dahulu agar deklarasi lokal procedure tidak hilang dari AST dan tetap terdaftar pada scope procedure
     if (ParseNode *blockParse = child(node, "<block>"))
+    {
+        if (ParseNode *declPart = child(blockParse, "<declaration_part>"))
+            localDecls = visitDeclarationPart(declPart);
+
         blockNode = visitBlock(blockParse);
+    }
 
     symtab.popScope();
 
@@ -674,13 +703,18 @@ ASTPtr SemanticAnalyzer::visitFuncDecl(ParseNode *node)
         params = visitFormalParams(formal);
 
     vector<ASTPtr> localDecls;
-    if (ParseNode *declPart = child(node, "<declaration_part>"))
-        localDecls = visitDeclarationPart(declPart);
-
     ASTPtr returnType = createTypeNode(returnTypeParse);
     ASTPtr blockNode = make_unique<BlockNode>(vector<ASTPtr>{});
+
+    // Sama seperti procedure, declaration-part lokal function berada di dalam <block>
+    // Ini penting untuk scope checking dan supaya AST function lengkap
     if (ParseNode *blockParse = child(node, "<block>"))
+    {
+        if (ParseNode *declPart = child(blockParse, "<declaration_part>"))
+            localDecls = visitDeclarationPart(declPart);
+
         blockNode = visitBlock(blockParse);
+    }
 
     symtab.popScope();
 
@@ -755,7 +789,15 @@ ASTPtr SemanticAnalyzer::createTypeNode(ParseNode *typeNode)
 
 ASTPtr SemanticAnalyzer::buildArrayType(ParseNode *node)
 {
-    ASTPtr indexType = buildRange(child(node, "<range>"));
+    // Index array pada spek boleh berbentuk range (array[1..10]) atau nama tipe ordinal (array[char])
+    // Keduanya tetap disimpan sebagai indexType agar AST menjelaskan batas/tipe indeks array
+    ASTPtr indexType = nullptr;
+    if (ParseNode *range = child(node, "<range>"))
+        indexType = buildRange(range);
+    else if (ParseNode *ident = firstTerminal(node, "ident"))
+        indexType = make_unique<TypeNameNode>(terminalValue(ident));
+    else
+        indexType = make_unique<TypeNameNode>("<unknown-index>");
 
     ParseNode *elementTypeParse = nullptr;
     for (ParseNode *ch : node->children)
@@ -777,6 +819,15 @@ ASTPtr SemanticAnalyzer::buildRange(ParseNode *node)
     if (!node)
         return make_unique<TypeNameNode>("<unknown-range>");
 
+    // Spek m2 mendefinisikan <range> sebagai: expression + period + period + expression
+    // Ada juga kemungkinan disederhanakan menjadi <constant>, jadi fungsi ini mendukung keduanya agar robust terhadap variasi parse tree
+    vector<ParseNode *> exprs = children(node, "<expression>");
+    if (exprs.size() >= 2)
+    {
+        ASTPtr low = visitExpression(exprs[0]);
+        ASTPtr high = visitExpression(exprs[1]);
+        return make_unique<RangeTypeNode>(move(low), move(high));
+    }
     vector<ParseNode *> constants = children(node, "<constant>");
     ASTPtr low = constants.size() >= 1 ? visitConstant(constants[0]) : nullptr;
     ASTPtr high = constants.size() >= 2 ? visitConstant(constants[1]) : nullptr;
@@ -804,28 +855,116 @@ int SemanticAnalyzer::registerArrayType(ParseNode *typeNode)
         }
     }
 
+    // Helper lokal: mengubah AST constant sederhana menjadi nilai ordinal
+    // Integer disimpan sebagai nilainya, char disimpan sebagai kode karakter
+    auto ordinalValue = [](const ASTNode *n, int &out) -> bool {
+        if (!n)
+            return false;
+        if (n->kind == ASTKind::Num)
+        {
+            const auto *num = static_cast<const NumNode *>(n);
+            if (num->isReal)
+                return false;
+            try
+            {
+                out = stoi(num->rawValue);
+                return true;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+        if (n->kind == ASTKind::Char)
+        {
+            const auto *ch = static_cast<const CharNode *>(n);
+            if (ch->value.empty())
+                return false;
+            out = static_cast<unsigned char>(ch->value[0]);
+            return true;
+        }
+        return false;
+    };
+
+    TypeCode xtyp = TYPE_INTEGER;
     int low = 0, high = 0;
+
     if (rangeNode)
     {
-        auto consts = children(rangeNode, "<constant>");
-        if (consts.size() >= 1)
+        ASTPtr rangeAst = buildRange(rangeNode);
+        if (rangeAst && rangeAst->kind == ASTKind::RangeType)
         {
-            ASTPtr lo = visitConstant(consts[0]);
-            if (lo && lo->kind == ASTKind::Num)
-                low = stoi(static_cast<NumNode *>(lo.get())->rawValue);
+            auto *rng = static_cast<RangeTypeNode *>(rangeAst.get());
+            TypeCode lowT = getTypeFromAST(rng->low.get());
+            TypeCode highT = getTypeFromAST(rng->high.get());
+            if (lowT == TYPE_CHAR || highT == TYPE_CHAR)
+                xtyp = TYPE_CHAR;
+            else
+                xtyp = TYPE_INTEGER;
+
+            ordinalValue(rng->low.get(), low);
+            ordinalValue(rng->high.get(), high);
         }
-        if (consts.size() >= 2)
+    }
+    else if (ParseNode *ident = firstTerminal(arrayNode, "ident"))
+    {
+        // Bentuk array[char] of integer atau array[SomeType] of integer
+        // xtyp harus tipe indeksnya
+        xtyp = resolveTypeName(terminalValue(ident));
+        if (xtyp == TYPE_CHAR)
         {
-            ASTPtr hi = visitConstant(consts[1]);
-            if (hi && hi->kind == ASTKind::Num)
-                high = stoi(static_cast<NumNode *>(hi.get())->rawValue);
+            low = 0;
+            high = 255;
         }
     }
 
     TypeCode etyp = resolveType(elemTypeNode);
+    int eref = 0;
+    if (etyp == TYPE_ARRAY)
+        eref = registerArrayType(elemTypeNode);
+    else if (etyp == TYPE_RECORD)
+        eref = registerRecordType(elemTypeNode);
+
     int elsz = 1;
 
-    return symtab.enterArray(TYPE_ARRAY, etyp, 0, low, high, elsz);
+    return symtab.enterArray(xtyp, etyp, eref, low, high, elsz);
+}
+
+int SemanticAnalyzer::registerRecordType(ParseNode *typeNode)
+{
+    if (!typeNode)
+        return 0;
+
+    ParseNode *recordNode = child(typeNode, "<record_type>");
+    if (!recordNode)
+        return 0;
+
+    //record diperlakukan sebagai scope tersendiri di btab karena field-field record adalah identifier yang hidup di dalam scope record tersebut
+    int recordBlock = symtab.pushScope();
+
+    if (ParseNode *fieldList = child(recordNode, "<field_list>"))
+    {
+        for (ParseNode *part : fieldList->children)
+        {
+            if (part->label != "<field_part>")
+                continue;
+
+            ParseNode *idList = child(part, "<identifier_list>");
+            ParseNode *typeParse = child(part, "<type>");
+            TypeCode fieldType = resolveType(typeParse);
+            int fieldRef = 0;
+            if (fieldType == TYPE_ARRAY)
+                fieldRef = registerArrayType(typeParse);
+            else if (fieldType == TYPE_RECORD)
+                fieldRef = registerRecordType(typeParse);
+
+            for (const string &fieldName : identifierList(idList))
+                symtab.enter(fieldName, OBJ_VARIABLE, fieldType, fieldRef, 1, 0);
+        }
+    }
+
+    symtab.popScope();
+    return recordBlock;
 }
 
 ASTPtr SemanticAnalyzer::buildEnumerated(ParseNode *node)
@@ -1099,10 +1238,10 @@ ASTPtr SemanticAnalyzer::visitWhileStmt(ParseNode *node)
     checkConditionType(getTypeFromAST(condition.get()), "while");
 
     ASTPtr body;
-    if (ParseNode *stmtParse = child(node, "<statement>"))
-        body = visitStatement(stmtParse);
-    else if (ParseNode *compoundParse = child(node, "<compound-statement>"))
+    if (ParseNode *compoundParse = child(node, "<compound-statement>"))
         body = visitCompoundStmt(compoundParse);
+    else if (ParseNode *stmtParse = child(node, "<statement>"))
+        body = visitStatement(stmtParse);
     else
         body = make_unique<BlockNode>(vector<ASTPtr>{});
 
@@ -1149,10 +1288,10 @@ ASTPtr SemanticAnalyzer::visitForStmt(ParseNode *node)
     }
 
     ASTPtr body;
-    if (ParseNode *stmtParse = child(node, "<statement>"))
-        body = visitStatement(stmtParse);
-    else if (ParseNode *compoundParse = child(node, "<compound-statement>"))
+    if (ParseNode *compoundParse = child(node, "<compound-statement>"))
         body = visitCompoundStmt(compoundParse);
+    else if (ParseNode *stmtParse = child(node, "<statement>"))
+        body = visitStatement(stmtParse);
     else
         body = make_unique<BlockNode>(vector<ASTPtr>{});
 
