@@ -5,6 +5,9 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -g
 # Direktori
 SRC_DIR  = src
 BIN_DIR  = bin
+T1       = test/milestone-1
+T2       = test/milestone-2
+T3       = test/milestone-3
 
 # File source
 SRCS     = $(SRC_DIR)/main.cpp $(SRC_DIR)/lex_analyzer.cpp $(SRC_DIR)/parser.cpp \
@@ -12,7 +15,7 @@ SRCS     = $(SRC_DIR)/main.cpp $(SRC_DIR)/lex_analyzer.cpp $(SRC_DIR)/parser.cpp
            $(SRC_DIR)/symbol_table.cpp $(SRC_DIR)/semantic_analyzer.cpp
 TARGET   = $(BIN_DIR)/lexer.exe
 
-# Default target
+#  Build 
 all: $(BIN_DIR) $(TARGET)
 
 $(BIN_DIR):
@@ -21,82 +24,68 @@ $(BIN_DIR):
 $(TARGET): $(SRCS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRCS)
 
-# Run lexer: make run INPUT=test/milestone-2/input-1.txt
-# Output akan otomatis dibuat sebagai output-1.txt di folder yang sama
+#  M1: tokens only 
+test1:   all; mkdir -p $(T1)
+	./$(TARGET) $(T1)/input-1.txt $(T1)/output-1.txt --m1
+
+test1-1: all; mkdir -p $(T1)
+	./$(TARGET) $(T1)/input-1.txt $(T1)/output-1.txt --m1
+test1-2: all; mkdir -p $(T1)
+	./$(TARGET) $(T1)/input-2.txt $(T1)/output-2.txt --m1
+test1-3: all; mkdir -p $(T1)
+	./$(TARGET) $(T1)/input-3.txt $(T1)/output-3.txt --m1
+test1-4: all; mkdir -p $(T1)
+	./$(TARGET) $(T1)/input-4.txt $(T1)/output-4.txt --m1
+test1-5: all; mkdir -p $(T1)
+	./$(TARGET) $(T1)/input-5.txt $(T1)/output-5.txt --m1
+
+#  M2: tokens + parse tree 
+test2:   all; mkdir -p $(T2)
+	./$(TARGET) $(T2)/input-1.txt $(T2)/output-1.txt --m2
+	./$(TARGET) $(T2)/input-2.txt $(T2)/output-2.txt --m2
+	./$(TARGET) $(T2)/input-3.txt $(T2)/output-3.txt --m2
+	./$(TARGET) $(T2)/input-4.txt $(T2)/output-4.txt --m2
+	./$(TARGET) $(T2)/input-5.txt $(T2)/output-5.txt --m2
+
+test2-1: all; mkdir -p $(T2)
+	./$(TARGET) $(T2)/input-1.txt $(T2)/output-1.txt --m2
+test2-2: all; mkdir -p $(T2)
+	./$(TARGET) $(T2)/input-2.txt $(T2)/output-2.txt --m2
+test2-3: all; mkdir -p $(T2)
+	./$(TARGET) $(T2)/input-3.txt $(T2)/output-3.txt --m2
+test2-4: all; mkdir -p $(T2)
+	./$(TARGET) $(T2)/input-4.txt $(T2)/output-4.txt --m2
+test2-5: all; mkdir -p $(T2)
+	./$(TARGET) $(T2)/input-5.txt $(T2)/output-5.txt --m2
+
+#  M3: tokens + parse tree + decorated AST + symbol tables 
+test3:   all; mkdir -p $(T3)
+	./$(TARGET) $(T3)/input-1.txt $(T3)/output-1.txt --m3
+	./$(TARGET) $(T3)/input-2.txt $(T3)/output-2.txt --m3
+	./$(TARGET) $(T3)/input-3.txt $(T3)/output-3.txt --m3
+	./$(TARGET) $(T3)/input-4.txt $(T3)/output-4.txt --m3
+	./$(TARGET) $(T3)/input-5.txt $(T3)/output-5.txt --m3
+
+test3-1: all; mkdir -p $(T3)
+	./$(TARGET) $(T3)/input-1.txt $(T3)/output-1.txt --m3
+test3-2: all; mkdir -p $(T3)
+	./$(TARGET) $(T3)/input-2.txt $(T3)/output-2.txt --m3
+test3-3: all; mkdir -p $(T3)
+	./$(TARGET) $(T3)/input-3.txt $(T3)/output-3.txt --m3
+test3-4: all; mkdir -p $(T3)
+	./$(TARGET) $(T3)/input-4.txt $(T3)/output-4.txt --m3
+test3-5: all; mkdir -p $(T3)
+	./$(TARGET) $(T3)/input-5.txt $(T3)/output-5.txt --m3
+
+#  Run manual: make run INPUT=... OUTPUT=... FLAG=--m3 
 run: all
-	./$(TARGET) $(INPUT) $(dir $(INPUT))$(subst input-,output-,$(notdir $(INPUT)))
+	./$(TARGET) $(INPUT) $(OUTPUT) $(FLAG)
 
-# Run dengan token output file: make runout INPUT=... OUTPUT=...
-runout: all
-	./$(TARGET) $(INPUT) $(OUTPUT)
-
-# Run dengan parse tree output saja: make runparse INPUT=... TREEOUT=...
-runparse: all
-	./$(TARGET) $(INPUT) $(TREEOUT)
-
-# Shortcut test milestone 1
-test1: all
-	mkdir -p test/milestone-1
-	./$(TARGET) test/milestone-1/input-1.txt test/milestone-1/output-1.txt
-
-# Shortcut test milestone 2
-test2: all
-	mkdir -p test/milestone-2
-	./$(TARGET) test/milestone-2/input-1.txt test/milestone-2/output-1.txt
-
-# Test milestone 2 dengan input file 1-5
-test2-1: all
-	mkdir -p test/milestone-2
-	./$(TARGET) test/milestone-2/input-1.txt test/milestone-2/output-1.txt
-
-test2-2: all
-	mkdir -p test/milestone-2
-	./$(TARGET) test/milestone-2/input-2.txt test/milestone-2/output-2.txt
-
-test2-3: all
-	mkdir -p test/milestone-2
-	./$(TARGET) test/milestone-2/input-3.txt test/milestone-2/output-3.txt
-
-test2-4: all
-	mkdir -p test/milestone-2
-	./$(TARGET) test/milestone-2/input-4.txt test/milestone-2/output-4.txt
-
-test2-5: all
-	mkdir -p test/milestone-2
-	./$(TARGET) test/milestone-2/input-5.txt test/milestone-2/output-5.txt
-
-# Shortcut test milestone 3 semua input sekaligus (full output)
-test3: all
-	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --full
-	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --full
-	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --full
-	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --full
-	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --full
-
-test3-1: all
-	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-1.txt test/milestone-3/output-1.txt --full
-
-test3-2: all
-	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-2.txt test/milestone-3/output-2.txt --full
-
-test3-3: all
-	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-3.txt test/milestone-3/output-3.txt --full
-
-test3-4: all
-	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-4.txt test/milestone-3/output-4.txt --full
-
-test3-5: all
-	mkdir -p test/milestone-3
-	./$(TARGET) test/milestone-3/input-5.txt test/milestone-3/output-5.txt --full
-
-# Bersihkan hasil kompilasi
+#  Bersihkan 
 clean:
 	rm -rf $(BIN_DIR)
 
-.PHONY: all run runout runparse test1 test2 test3 \
-        test3-1 test3-2 test3-3 test3-4 test3-5 clean
+.PHONY: all run clean \
+        test1 test1-1 test1-2 test1-3 test1-4 test1-5 \
+        test2 test2-1 test2-2 test2-3 test2-4 test2-5 \
+        test3 test3-1 test3-2 test3-3 test3-4 test3-5

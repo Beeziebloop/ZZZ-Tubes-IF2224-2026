@@ -1,267 +1,3 @@
-programsy
-ident (Arithmetic)
-semicolon
-varsy
-ident (a)
-comma
-ident (b)
-colon
-ident (integer)
-semicolon
-ident (x)
-comma
-ident (y)
-colon
-ident (real)
-semicolon
-ident (res)
-colon
-ident (real)
-semicolon
-beginsy
-ident (a)
-becomes
-intcon (10)
-semicolon
-ident (b)
-becomes
-intcon (3)
-semicolon
-ident (x)
-becomes
-realcon (2.5)
-semicolon
-ident (y)
-becomes
-realcon (1.5)
-semicolon
-ident (res)
-becomes
-ident (a)
-plus
-ident (b)
-semicolon
-ident (res)
-becomes
-ident (x)
-times
-ident (y)
-semicolon
-ident (res)
-becomes
-ident (a)
-rdiv
-ident (b)
-semicolon
-ident (a)
-becomes
-ident (a)
-idiv
-ident (b)
-semicolon
-ident (a)
-becomes
-ident (a)
-imod
-ident (b)
-semicolon
-ident (res)
-becomes
-ident (x)
-minus
-ident (y)
-semicolon
-
-endsy
-period
-
---- PARSE TREE ---
-<program>
-├── <program_header>
-│   ├── programsy
-│   ├── ident(Arithmetic)
-│   └── semicolon
-├── <declaration_part>
-│   └── <var_decl>
-│       ├── varsy
-│       ├── <var_item>
-│       │   ├── <identifier_list>
-│       │   │   ├── ident(a)
-│       │   │   └── ident(b)
-│       │   ├── colon
-│       │   ├── <type>
-│       │   │   └── ident(integer)
-│       │   └── semicolon
-│       ├── <var_item>
-│       │   ├── <identifier_list>
-│       │   │   ├── ident(x)
-│       │   │   └── ident(y)
-│       │   ├── colon
-│       │   ├── <type>
-│       │   │   └── ident(real)
-│       │   └── semicolon
-│       └── <var_item>
-│           ├── <identifier_list>
-│           │   └── ident(res)
-│           ├── colon
-│           ├── <type>
-│           │   └── ident(real)
-│           └── semicolon
-├── <block>
-│   └── <compound-statement>
-│       ├── beginsy
-│       ├── <statement-list>
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(a)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   └── <factor>
-│       │   │                       └── intcon(10)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(b)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   └── <factor>
-│       │   │                       └── intcon(3)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(x)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   └── <factor>
-│       │   │                       └── realcon(2.5)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(y)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   └── <factor>
-│       │   │                       └── realcon(1.5)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(res)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               ├── <term>
-│       │   │               │   └── <factor>
-│       │   │               │       └── <variable>
-│       │   │               │           └── ident(a)
-│       │   │               ├── <additive-operator>
-│       │   │               │   └── plus
-│       │   │               └── <term>
-│       │   │                   └── <factor>
-│       │   │                       └── <variable>
-│       │   │                           └── ident(b)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(res)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   ├── <factor>
-│       │   │                   │   └── <variable>
-│       │   │                   │       └── ident(x)
-│       │   │                   ├── <multiplicative-operator>
-│       │   │                   │   └── times
-│       │   │                   └── <factor>
-│       │   │                       └── <variable>
-│       │   │                           └── ident(y)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(res)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   ├── <factor>
-│       │   │                   │   └── <variable>
-│       │   │                   │       └── ident(a)
-│       │   │                   ├── <multiplicative-operator>
-│       │   │                   │   └── rdiv
-│       │   │                   └── <factor>
-│       │   │                       └── <variable>
-│       │   │                           └── ident(b)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(a)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   ├── <factor>
-│       │   │                   │   └── <variable>
-│       │   │                   │       └── ident(a)
-│       │   │                   ├── <multiplicative-operator>
-│       │   │                   │   └── idiv
-│       │   │                   └── <factor>
-│       │   │                       └── <variable>
-│       │   │                           └── ident(b)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(a)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               └── <term>
-│       │   │                   ├── <factor>
-│       │   │                   │   └── <variable>
-│       │   │                   │       └── ident(a)
-│       │   │                   ├── <multiplicative-operator>
-│       │   │                   │   └── imod
-│       │   │                   └── <factor>
-│       │   │                       └── <variable>
-│       │   │                           └── ident(b)
-│       │   ├── semicolon
-│       │   ├── <statement>
-│       │   │   └── <assignment-statement>
-│       │   │       ├── <variable>
-│       │   │       │   └── ident(res)
-│       │   │       ├── becomes
-│       │   │       └── <expression>
-│       │   │           └── <simple-expression>
-│       │   │               ├── <term>
-│       │   │               │   └── <factor>
-│       │   │               │       └── <variable>
-│       │   │               │           └── ident(x)
-│       │   │               ├── <additive-operator>
-│       │   │               │   └── minus
-│       │   │               └── <term>
-│       │   │                   └── <factor>
-│       │   │                       └── <variable>
-│       │   │                           └── ident(y)
-│       │   ├── semicolon
-│       │   └── <statement>
-│       └── endsy
-└── period
 
 --- ABSTRACT SYNTAX TREE ---
 ProgramNode(name: 'Arithmetic')
@@ -420,3 +156,61 @@ ProgramNode(name: 'Arithmetic')
             Var('x' : real [tab=45, lev=0])
             Var('y' : real [tab=46, lev=0])
       Empty
+
+===== TAB =====
+IDX  IDENT          LINK      OBJ       TYPE      REF       NRM       LEV       ADR       
+0    and            0         2         0         0         1         0         0         
+1    array          0         2         0         0         1         0         0         
+2    begin          0         2         0         0         1         0         0         
+3    case           0         2         0         0         1         0         0         
+4    const          0         2         0         0         1         0         0         
+5    div            0         2         0         0         1         0         0         
+6    downto         0         2         0         0         1         0         0         
+7    do             0         2         0         0         1         0         0         
+8    else           0         2         0         0         1         0         0         
+9    end            0         2         0         0         1         0         0         
+10   for            0         2         0         0         1         0         0         
+11   function       0         2         0         0         1         0         0         
+12   if             0         2         0         0         1         0         0         
+13   mod            0         2         0         0         1         0         0         
+14   not            0         2         0         0         1         0         0         
+15   of             0         2         0         0         1         0         0         
+16   or             0         2         0         0         1         0         0         
+17   procedure      0         2         0         0         1         0         0         
+18   program        0         2         0         0         1         0         0         
+19   record         0         2         0         0         1         0         0         
+20   repeat         0         2         0         0         1         0         0         
+21   integer        0         2         0         0         1         0         0         
+22   real           0         2         0         0         1         0         0         
+23   boolean        0         2         0         0         1         0         0         
+24   char           0         2         0         0         1         0         0         
+25   string         0         2         0         0         1         0         0         
+26   then           0         2         0         0         1         0         0         
+27   to             0         2         0         0         1         0         0         
+28   type           0         2         0         0         1         0         0         
+29   until          0         2         0         0         1         0         0         
+30   var            0         2         0         0         1         0         0         
+31   while          0         2         0         0         1         0         0         
+32   (reserved)     0         2         0         0         1         0         0         
+33   integer        0         2         1         0         1         0         0         
+34   real           33        2         2         0         1         0         0         
+35   char           34        2         3         0         1         0         0         
+36   boolean        35        2         4         0         1         0         0         
+37   string         36        2         5         0         1         0         0         
+38   true           37        0         4         0         1         0         1         
+39   false          38        0         4         0         1         0         0         
+40   writeln        39        3         0         0         1         0         0         
+41   readln         40        3         0         0         1         0         0         
+42   arithmetic     41        5         0         0         1         0         0         
+43   a              42        1         1         0         1         0         0         
+44   b              43        1         1         0         1         0         0         
+45   x              44        1         2         0         1         0         0         
+46   y              45        1         2         0         1         0         0         
+47   res            46        1         2         0         1         0         0         
+
+===== BTAB =====
+IDX  LAST      LPAR      PSZE      VSZE      
+0    47        0         0         5         
+
+===== ATAB =====
+IDX  XTYP      ETYP      EREF      LOW       HIGH      ELSZ      SIZE      

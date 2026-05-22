@@ -7,7 +7,7 @@ begin
   found := false;
   while i <= 10 do
   begin
-    if i mod 2 == 0 then
+    if i mod 2 = 0 then
     begin
       found := true;
       writeln(i)
@@ -16,5 +16,5 @@ begin
   end;
   repeat
     i := i - 1
-  until i == 0
+  until i = 0
 end.

@@ -1,12 +1,13 @@
 #ifndef SYMBOL_TABLE_HPP
 #define SYMBOL_TABLE_HPP
 
+#include <iostream>
 #include <string>
 #include <vector>
 
 using namespace std;
 
-// Enum untuk obj class
+// Enum obj class
 enum ObjClass
 {
     OBJ_CONSTANT,
@@ -17,7 +18,7 @@ enum ObjClass
     OBJ_PROGRAM
 };
 
-// Enum untuk type codes (indeks ke tab atau kode builtin)
+// Enum  type codes
 enum TypeCode
 {
     TYPE_NONE = 0,
@@ -65,7 +66,6 @@ struct ATabEntry
     int size;      // total ukuran array
 };
 
-// Class SymbolTable
 class SymbolTable
 {
 public:
@@ -73,7 +73,7 @@ public:
     std::vector<BTabEntry> btab;
     std::vector<ATabEntry> atab;
 
-    int currentLevel;         // lexical level saat ini
+    int currentLevel;         
     std::vector<int> display; // display[level] = indeks btab blok aktif di level tsb
 
     SymbolTable(); // konstruktor: init predefined + reserved
@@ -81,22 +81,19 @@ public:
     // Registrasi identifier baru ke tab, update btab[current].last
     int enter(const std::string &name, ObjClass obj, TypeCode type, int ref = 0, int nrm = 1, int adr = 0);
 
-    // Lookup dari scope terdalam ke terluar, return index tab atau -1
     int lookup(const std::string &name) const;
 
-    // Push scope baru (masuk blok: fungsi/prosedur/record)
+    // masuk blok: fungsi/prosedur/record
     int pushScope(); // return indeks btab baru
 
-    // Pop scope (keluar dari blok)
     void popScope();
 
-    // Tambah entri atab, return indeksnya
     int enterArray(TypeCode xtyp, TypeCode etyp, int eref, int low, int high, int elsz);
 
-    // Print ketiga tabel (untuk debugging/output)
-    void printTab() const;
-    void printBtab() const;
-    void printAtab() const;
+    // Print tabel (debug)
+    void printTab(std::ostream &out = std::cout) const;
+    void printBtab(std::ostream &out = std::cout) const;
+    void printAtab(std::ostream &out = std::cout) const;
 
 private:
     void initPredefined(); // isi reserved words + predefined identifiers

@@ -183,7 +183,7 @@ string SemanticAnalyzer::operatorFromNode(ParseNode *node) const
         if (name == "orsy")
             return "or";
         if (name == "eql")
-            return "==";
+            return "=";
         if (name == "neq")
             return "<>";
         if (name == "gtr")
@@ -248,9 +248,9 @@ void SemanticAnalyzer::enterTypeAlias(const string &name, TypeCode type)
     symtab.enter(name, OBJ_TYPE, type, 0, 1, 0);
 }
 
-void SemanticAnalyzer::enterSubprogram(const string &name, ObjClass obj, TypeCode retType)
+int SemanticAnalyzer::enterSubprogram(const string &name, ObjClass obj, TypeCode retType)
 {
-    symtab.enter(name, obj, retType, 0, 1, 0);
+    return symtab.enter(name, obj, retType, 0, 1, 0);
 }
 
 void SemanticAnalyzer::decorateVar(ASTNode *node, const string &name)
@@ -398,7 +398,7 @@ TypeCode SemanticAnalyzer::resultTypeOfBinOp(const string &op,
     if (op == "and" || op == "or")
         return TYPE_BOOLEAN;
 
-    if (op == "==" || op == "<>" || op == "<" || op == ">" || op == "<=" || op == ">=")
+    if (op == "=" || op == "<>" || op == "<" || op == ">" || op == "<=" || op == ">=")
         return TYPE_BOOLEAN;
 
     return TYPE_NONE;
@@ -431,10 +431,20 @@ void SemanticAnalyzer::checkConditionType(TypeCode type,
 
 void SemanticAnalyzer::semanticError(const string &msg, int line)
 {
-    cerr << "Semantic Error";
+    string entry = "Semantic Error";
     if (line != -1)
-        cerr << " at line " << line;
-    cerr << ": " << msg << endl;
+        entry += " at line " + to_string(line);
+    entry += ": " + msg;
+    errors.push_back(entry);
+}
+
+void SemanticAnalyzer::printErrors(ostream &out) const
+{
+    if (errors.empty())
+        return;
+    out << "\n===== SEMANTIC ERRORS (" << errors.size() << ") =====\n";
+    for (const string &e : errors)
+        out << e << "\n";
 }
 
 string SemanticAnalyzer::typeCodeToString(TypeCode t)
@@ -624,13 +634,16 @@ ASTPtr SemanticAnalyzer::visitProcDecl(ParseNode *node)
     ParseNode *ident = firstTerminal(node, "ident");
     string name = ident ? terminalValue(ident) : "<anonymous-procedure>";
 
-    enterSubprogram(name, OBJ_PROCEDURE, TYPE_NONE);
+    int subIdx = enterSubprogram(name, OBJ_PROCEDURE, TYPE_NONE);
 
     vector<ASTPtr> params;
     symtab.pushScope();
 
+    ParamInfo sig;
     if (ParseNode *formal = child(node, "<formal_params>"))
-        params = visitFormalParams(formal);
+        params = visitFormalParams(formal, sig);
+    if (subIdx >= 0)
+        paramSignatures[subIdx] = sig;
 
     vector<ASTPtr> localDecls;
     if (ParseNode *declPart = child(node, "<declaration_part>"))
@@ -665,13 +678,16 @@ ASTPtr SemanticAnalyzer::visitFuncDecl(ParseNode *node)
     }
 
     TypeCode retCode = resolveType(returnTypeParse);
-    enterSubprogram(name, OBJ_FUNCTION, retCode);
+    int subIdx = enterSubprogram(name, OBJ_FUNCTION, retCode);
 
     vector<ASTPtr> params;
     symtab.pushScope();
 
+    ParamInfo sig;
     if (ParseNode *formal = child(node, "<formal_params>"))
-        params = visitFormalParams(formal);
+        params = visitFormalParams(formal, sig);
+    if (subIdx >= 0)
+        paramSignatures[subIdx] = sig;
 
     vector<ASTPtr> localDecls;
     if (ParseNode *declPart = child(node, "<declaration_part>"))
@@ -692,7 +708,7 @@ ASTPtr SemanticAnalyzer::visitFuncDecl(ParseNode *node)
         move(blockNode));
 }
 
-vector<ASTPtr> SemanticAnalyzer::visitFormalParams(ParseNode *node)
+vector<ASTPtr> SemanticAnalyzer::visitFormalParams(ParseNode *node, ParamInfo &sig)
 {
     vector<ASTPtr> result;
     if (!node)
@@ -702,14 +718,14 @@ vector<ASTPtr> SemanticAnalyzer::visitFormalParams(ParseNode *node)
     {
         if (ch->label == "<param_group>")
         {
-            auto group = visitParamGroup(ch);
+            auto group = visitParamGroup(ch, sig);
             moveAppend(result, group);
         }
     }
     return result;
 }
 
-vector<ASTPtr> SemanticAnalyzer::visitParamGroup(ParseNode *node)
+vector<ASTPtr> SemanticAnalyzer::visitParamGroup(ParseNode *node, ParamInfo &sig)
 {
     vector<ASTPtr> result;
 
@@ -721,8 +737,9 @@ vector<ASTPtr> SemanticAnalyzer::visitParamGroup(ParseNode *node)
 
     for (const string &paramName : identifierList(idList))
     {
-        // nrm=1 normal value param, nrm=0 var (by-reference) param
         symtab.enter(paramName, OBJ_VARIABLE, typeCode, 0, byRef ? 0 : 1, 0);
+        sig.types.push_back(typeCode);
+        sig.byRef.push_back(byRef);
         result.push_back(make_unique<ParamDeclNode>(
             paramName,
             copyTypeNode(typeAst.get()),
@@ -1099,9 +1116,7 @@ ASTPtr SemanticAnalyzer::visitWhileStmt(ParseNode *node)
     checkConditionType(getTypeFromAST(condition.get()), "while");
 
     ASTPtr body;
-    if (ParseNode *stmtParse = child(node, "<statement>"))
-        body = visitStatement(stmtParse);
-    else if (ParseNode *compoundParse = child(node, "<compound-statement>"))
+    if (ParseNode *compoundParse = child(node, "<compound-statement>"))
         body = visitCompoundStmt(compoundParse);
     else
         body = make_unique<BlockNode>(vector<ASTPtr>{});
@@ -1149,9 +1164,7 @@ ASTPtr SemanticAnalyzer::visitForStmt(ParseNode *node)
     }
 
     ASTPtr body;
-    if (ParseNode *stmtParse = child(node, "<statement>"))
-        body = visitStatement(stmtParse);
-    else if (ParseNode *compoundParse = child(node, "<compound-statement>"))
+    if (ParseNode *compoundParse = child(node, "<compound-statement>"))
         body = visitCompoundStmt(compoundParse);
     else
         body = make_unique<BlockNode>(vector<ASTPtr>{});
@@ -1187,6 +1200,41 @@ ASTPtr SemanticAnalyzer::visitProcCall(ParseNode *node)
         {
             if (ch->label == "<expression>")
                 args.push_back(visitExpression(ch));
+        }
+    }
+
+    // Cek jumlah dan tipe argumen jika signature diketahui
+    // writeln/readln dilewati karena variadic
+    if (idx >= 0 && name != "writeln" && name != "readln")
+    {
+        auto it = paramSignatures.find(idx);
+        if (it != paramSignatures.end())
+        {
+            const ParamInfo &sig = it->second;
+            int expected = static_cast<int>(sig.types.size());
+            int got      = static_cast<int>(args.size());
+
+            if (got != expected)
+            {
+                semanticError("'" + name + "' expects " + to_string(expected) +
+                              " argument(s), got " + to_string(got));
+            }
+            else
+            {
+                for (int i = 0; i < got; i++)
+                {
+                    TypeCode argType = getTypeFromAST(args[i].get());
+                    TypeCode paramType = sig.types[i];
+                    if (argType != TYPE_NONE && paramType != TYPE_NONE &&
+                        !isAssignCompatible(paramType, argType))
+                    {
+                        semanticError("argument " + to_string(i + 1) +
+                                      " of '" + name + "': expected " +
+                                      typeCodeToString(paramType) +
+                                      ", got " + typeCodeToString(argType));
+                    }
+                }
+            }
         }
     }
 

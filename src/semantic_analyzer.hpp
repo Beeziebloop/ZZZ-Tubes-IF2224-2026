@@ -1,6 +1,7 @@
 #ifndef SEMANTIC_ANALYZER_HPP
 #define SEMANTIC_ANALYZER_HPP
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -8,10 +9,19 @@
 #include "parser.hpp"
 #include "symbol_table.hpp"
 
+// Info parameter untuk satu subprogram
+struct ParamInfo {
+    std::vector<TypeCode> types; // tipe tiap parameter (urutan deklarasi)
+    std::vector<bool> byRef;     // true = var parameter
+};
+
 class SemanticAnalyzer
 {
 public:
     SymbolTable symtab;
+
+    // paramSignatures[tab_index] = info parameter subprogram tsb
+    std::map<int, ParamInfo> paramSignatures;
 
     // Entry point
     ASTPtr analyze(ParseNode *root);
@@ -45,8 +55,8 @@ private:
     std::vector<ASTPtr> visitSubprogramDecl(ParseNode *node);
     ASTPtr visitProcDecl(ParseNode *node);
     ASTPtr visitFuncDecl(ParseNode *node);
-    std::vector<ASTPtr> visitFormalParams(ParseNode *node);
-    std::vector<ASTPtr> visitParamGroup(ParseNode *node);
+    std::vector<ASTPtr> visitFormalParams(ParseNode *node, ParamInfo &sig);
+    std::vector<ASTPtr> visitParamGroup(ParseNode *node, ParamInfo &sig);
 
     // Types
     ASTPtr createTypeNode(ParseNode *typeNode);
@@ -89,7 +99,7 @@ private:
     void enterVariable(const std::string &name, TypeCode type);
     void enterConstant(const std::string &name, TypeCode type, int adr = 0);
     void enterTypeAlias(const std::string &name, TypeCode type);
-    void enterSubprogram(const std::string &name, ObjClass obj, TypeCode retType = TYPE_NONE);
+    int enterSubprogram(const std::string &name, ObjClass obj, TypeCode retType = TYPE_NONE);
     void decorateVar(ASTNode *node, const std::string &name);
     TypeCode getTypeFromAST(const ASTNode *node);
     bool isCompatible(TypeCode t1, TypeCode t2);
@@ -105,6 +115,11 @@ private:
     void semanticError(const std::string &msg, int line = -1);
     static std::string typeCodeToString(TypeCode t);
     void setType(ASTNode *node, TypeCode t);
+
+public:
+    std::vector<std::string> errors;
+    bool hasErrors() const { return !errors.empty(); }
+    void printErrors(std::ostream &out = std::cerr) const;
 };
 
 #endif

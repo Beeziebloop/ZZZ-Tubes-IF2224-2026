@@ -610,15 +610,28 @@ ParseNode *Parser::parseCompoundStatement()
 }
 
 /* PARSE STATEMENT LIST
- * statement-list → statement (semicolon + statement)* */
+ * statement-list → statement (semicolon + statement)*
+ * while/for sudah ambil semicolon sendiri, statement berikutnya langsung muncul tanpa semicolon tambahan */
 ParseNode *Parser::parseStatementList()
 {
     ParseNode *node = new ParseNode("<statement-list>");
     node->addChild(parseStatement());
-    while (check(SEMICOLON))
+    for (;;)
     {
-        node->addChild(makeTerminal(advance())); // semicolon
-        node->addChild(parseStatement());
+        if (check(SEMICOLON))
+        {
+            node->addChild(makeTerminal(advance())); // semicolon separator
+            node->addChild(parseStatement());
+        }
+        else if (checkAny({IDENT, BEGINSY, IFSY, CASESY, WHILESY, REPEATSY, FORSY}))
+        {
+            // while/for sudah makan semicolonnya — lanjut tanpa semicolon
+            node->addChild(parseStatement());
+        }
+        else
+        {
+            break;
+        }
     }
     return node;
 }
@@ -755,7 +768,8 @@ ParseNode *Parser::parseWhileStatement()
     node->addChild(makeTerminal(expect(WHILESY)));
     node->addChild(parseExpression());
     node->addChild(makeTerminal(expect(DOSY)));
-    node->addChild(parseStatement());
+    node->addChild(parseCompoundStatement());
+    node->addChild(makeTerminal(expect(SEMICOLON)));
     return node;
 }
 
@@ -794,7 +808,8 @@ ParseNode *Parser::parseForStatement()
     }
     node->addChild(parseExpression());
     node->addChild(makeTerminal(expect(DOSY)));
-    node->addChild(parseStatement());
+    node->addChild(parseCompoundStatement());
+    node->addChild(makeTerminal(expect(SEMICOLON)));
     return node;
 }
 

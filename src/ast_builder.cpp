@@ -26,7 +26,7 @@ bool ASTBuilder::startsWith(const std::string& s, const std::string& prefix) con
     return s.rfind(prefix, 0) == 0;
 }
 
-//mengembalikan nama token terminal tanpa valuenya, misal ident(Hello) -> ident
+//mengembalikan nama token terminal tanpa value
 std::string ASTBuilder::terminalName(ParseNode* node) const {
     if (!node) return "";
 
@@ -40,7 +40,7 @@ std::string ASTBuilder::terminalName(ParseNode* node) const {
     return label.substr(0, pos);
 }
 
-//mengembalikan value dari token terminal, misal ident(Hello) -> Hello
+//mengembalikan value dari token terminal
 std::string ASTBuilder::terminalValue(ParseNode* node) const {
     if (!node) return "";
 
@@ -886,7 +886,7 @@ std::string ASTBuilder::operatorFromNode(ParseNode* node) const {
         if (name == "imod") return "mod";
         if (name == "andsy") return "and";
         if (name == "orsy") return "or";
-        if (name == "eql") return "==";
+        if (name == "eql") return "=";
         if (name == "neq") return "<>";
         if (name == "gtr") return ">";
         if (name == "geq") return ">=";

@@ -27,11 +27,20 @@ SymbolTable::SymbolTable()
 
 void SymbolTable::initPredefined()
 {
-    // Reserved slots 0 - 32
-    // Diisi dummy agar identifier user dimulai dari indeks 33
-    for (int i = 0; i < 33; i++)
+    // Reserved slots 0 - 32: 32 reserved words (Appendix D) + 1 spare
+    // Identifier user dimulai dari indeks 33
+    static const char *reservedWords[] = {
+        "and", "array", "begin", "case", "const",
+        "div", "downto", "do", "else", "end",
+        "for", "function", "if", "mod", "not",
+        "of", "or", "procedure", "program", "record",
+        "repeat", "integer", "real", "boolean", "char",
+        "string", "then", "to", "type", "until",
+        "var", "while"
+    };
+    for (int i = 0; i < 32; i++)
     {
-        tab.push_back({"RESERVED_" + to_string(i),
+        tab.push_back({reservedWords[i],
                        0,
                        OBJ_TYPE,
                        TYPE_NONE,
@@ -40,6 +49,15 @@ void SymbolTable::initPredefined()
                        0,
                        0});
     }
+    // slot 32: spare reserved
+    tab.push_back({"(reserved)",
+                   0,
+                   OBJ_TYPE,
+                   TYPE_NONE,
+                   0,
+                   1,
+                   0,
+                   0});
 
     // Helper lambda: push entry dan update btab[0].last + link
     auto addPredefined = [&](TabEntry e) {
@@ -198,94 +216,94 @@ int SymbolTable::enterArray(TypeCode xtyp,
     return static_cast<int>(atab.size()) - 1;
 }
 
-void SymbolTable::printTab() const
+void SymbolTable::printTab(ostream &out) const
 {
-    cout << "\n===== TAB =====\n";
+    out << "\n===== TAB =====\n";
 
-    cout << left
-         << setw(5) << "IDX"
-         << setw(15) << "IDENT"
-         << setw(10) << "LINK"
-         << setw(10) << "OBJ"
-         << setw(10) << "TYPE"
-         << setw(10) << "REF"
-         << setw(10) << "NRM"
-         << setw(10) << "LEV"
-         << setw(10) << "ADR"
-         << endl;
+    out << left
+        << setw(5) << "IDX"
+        << setw(15) << "IDENT"
+        << setw(10) << "LINK"
+        << setw(10) << "OBJ"
+        << setw(10) << "TYPE"
+        << setw(10) << "REF"
+        << setw(10) << "NRM"
+        << setw(10) << "LEV"
+        << setw(10) << "ADR"
+        << endl;
 
     for (size_t i = 0; i < tab.size(); i++)
     {
         const TabEntry &e = tab[i];
 
-        cout << left
-             << setw(5) << i
-             << setw(15) << e.identifier
-             << setw(10) << e.link
-             << setw(10) << e.obj
-             << setw(10) << e.type
-             << setw(10) << e.ref
-             << setw(10) << e.nrm
-             << setw(10) << e.lev
-             << setw(10) << e.adr
-             << endl;
+        out << left
+            << setw(5) << i
+            << setw(15) << e.identifier
+            << setw(10) << e.link
+            << setw(10) << e.obj
+            << setw(10) << e.type
+            << setw(10) << e.ref
+            << setw(10) << e.nrm
+            << setw(10) << e.lev
+            << setw(10) << e.adr
+            << endl;
     }
 }
 
-void SymbolTable::printBtab() const
+void SymbolTable::printBtab(ostream &out) const
 {
-    cout << "\n===== BTAB =====\n";
+    out << "\n===== BTAB =====\n";
 
-    cout << left
-         << setw(5) << "IDX"
-         << setw(10) << "LAST"
-         << setw(10) << "LPAR"
-         << setw(10) << "PSZE"
-         << setw(10) << "VSZE"
-         << endl;
+    out << left
+        << setw(5) << "IDX"
+        << setw(10) << "LAST"
+        << setw(10) << "LPAR"
+        << setw(10) << "PSZE"
+        << setw(10) << "VSZE"
+        << endl;
 
     for (size_t i = 0; i < btab.size(); i++)
     {
         const BTabEntry &e = btab[i];
 
-        cout << left
-             << setw(5) << i
-             << setw(10) << e.last
-             << setw(10) << e.lpar
-             << setw(10) << e.psze
-             << setw(10) << e.vsze
-             << endl;
+        out << left
+            << setw(5) << i
+            << setw(10) << e.last
+            << setw(10) << e.lpar
+            << setw(10) << e.psze
+            << setw(10) << e.vsze
+            << endl;
     }
 }
 
-void SymbolTable::printAtab() const
+void SymbolTable::printAtab(ostream &out) const
 {
-    cout << "\n===== ATAB =====\n";
+    out << "\n===== ATAB =====\n";
 
-    cout << left
-         << setw(5) << "IDX"
-         << setw(10) << "XTYP"
-         << setw(10) << "ETYP"
-         << setw(10) << "EREF"
-         << setw(10) << "LOW"
-         << setw(10) << "HIGH"
-         << setw(10) << "ELSZ"
-         << setw(10) << "SIZE"
-         << endl;
+    out << left
+        << setw(5) << "IDX"
+        << setw(10) << "XTYP"
+        << setw(10) << "ETYP"
+        << setw(10) << "EREF"
+        << setw(10) << "LOW"
+        << setw(10) << "HIGH"
+        << setw(10) << "ELSZ"
+        << setw(10) << "SIZE"
+        << endl;
 
     for (size_t i = 0; i < atab.size(); i++)
     {
         const ATabEntry &e = atab[i];
 
-        cout << left
-             << setw(5) << i
-             << setw(10) << e.xtyp
-             << setw(10) << e.etyp
-             << setw(10) << e.eref
-             << setw(10) << e.low
-             << setw(10) << e.high
-             << setw(10) << e.elsz
-             << setw(10) << e.size
-             << endl;
+        out << left
+            << setw(5) << i
+            << setw(10) << e.xtyp
+            << setw(10) << e.etyp
+            << setw(10) << e.eref
+            << setw(10) << e.low
+            << setw(10) << e.high
+            << setw(10) << e.elsz
+            << setw(10) << e.size
+            << endl;
     }
 };
