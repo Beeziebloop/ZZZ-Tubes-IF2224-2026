@@ -2,6 +2,7 @@
 #include "parser.hpp"
 #include "ast_builder.hpp"
 #include "semantic_analyzer.hpp"
+#include "code_generator.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -24,10 +25,10 @@ static std::string getFlag(int argc, char* argv[])
 {
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        if (arg == "--m1" || arg == "--m2" || arg == "--m3" || arg == "--full")
+        if (arg == "--m1" || arg == "--m2" || arg == "--m3" || arg == "--m4" || arg == "--full")
             return arg;
     }
-    return "--m3"; // default
+    return "--m3";
 }
 
 static std::string getOutputFile(int argc, char* argv[])
@@ -44,10 +45,11 @@ int main(int argc, char* argv[])
 {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0]
-                  << " <input.txt> [output.txt] [--m1|--m2|--m3|--full]\n"
+                  << " <input.txt> [output.txt] [--m1|--m2|--m3|--m4|--full]\n"
                   << "  --m1   : tokens only\n"
                   << "  --m2   : tokens + parse tree\n"
                   << "  --m3   : tokens + parse tree + decorated AST + symbol tables\n"
+                  << "  --m4   : --m3 + intermediate code (TAC)\n"
                   << "  --full : sama dengan --m3\n";
         return 1;
     }
@@ -55,8 +57,9 @@ int main(int argc, char* argv[])
     std::string flag      = getFlag(argc, argv);
     std::string outputFile = getOutputFile(argc, argv);
 
-    bool doM2   = (flag == "--m2" || flag == "--m3" || flag == "--full");
-    bool doM3   = (flag == "--m3" || flag == "--full");
+    bool doM2   = (flag == "--m2" || flag == "--m3" || flag == "--m4" || flag == "--full");
+    bool doM3   = (flag == "--m3" || flag == "--m4" || flag == "--full");
+    bool doM4   = (flag == "--m4");
 
     // Buka output file jika ada
     std::ofstream fileOut;
@@ -134,8 +137,19 @@ int main(int argc, char* argv[])
         // Print error list di akhir (ke stdout + file)
         if (semanalyzer.hasErrors()) {
             writeToAll([&](std::ostream& out) { semanalyzer.printErrors(out); });
-            return 1; // exit code non-zero jika ada semantic error
+            return 1;
         }
+
+        if (!doM4) {
+            return 0; // --m3: selesai di sini
+        }
+
+        /* ── M4: Intermediate Code Generation ── */
+        CodeGenerator codegen(semanalyzer.symtab);
+        Code code = codegen.generate(decoratedAst.get());
+
+        codegen.printCode(code, std::cout);
+        if (fileOut.is_open()) codegen.printCode(code, fileOut);
 
     } catch (const ParseError& e) {
         std::cerr << e.what() << "\n";

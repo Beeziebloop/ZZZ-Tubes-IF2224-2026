@@ -655,11 +655,13 @@ ASTPtr SemanticAnalyzer::visitProcDecl(ParseNode *node)
 
     symtab.popScope();
 
-    return make_unique<ProcedureDeclNode>(
+    auto procNode = make_unique<ProcedureDeclNode>(
         name,
         move(params),
         move(localDecls),
         move(blockNode));
+    procNode->tabIndex = subIdx;
+    return procNode;
 }
 
 ASTPtr SemanticAnalyzer::visitFuncDecl(ParseNode *node)
@@ -700,12 +702,14 @@ ASTPtr SemanticAnalyzer::visitFuncDecl(ParseNode *node)
 
     symtab.popScope();
 
-    return make_unique<FunctionDeclNode>(
+    auto funcNode = make_unique<FunctionDeclNode>(
         name,
         move(params),
         move(returnType),
         move(localDecls),
         move(blockNode));
+    funcNode->tabIndex = subIdx;
+    return funcNode;
 }
 
 vector<ASTPtr> SemanticAnalyzer::visitFormalParams(ParseNode *node, ParamInfo &sig)
@@ -1239,6 +1243,7 @@ ASTPtr SemanticAnalyzer::visitProcCall(ParseNode *node)
     }
 
     auto callNode = make_unique<ProcedureCallNode>(name, move(args));
+    callNode->tabIndex = idx;
     if (retType != TYPE_NONE)
         setType(callNode.get(), retType);
     return callNode;
