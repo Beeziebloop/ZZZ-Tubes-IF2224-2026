@@ -297,6 +297,10 @@ TypeCode SemanticAnalyzer::resolveType(ParseNode *typeNode)
         return TYPE_ARRAY;
     if (child(typeNode, "<record_type>"))
         return TYPE_RECORD;
+    if (child(typeNode, "<range>"))
+        return TYPE_SUBRANGE;
+    if (child(typeNode, "<enumerated>"))
+        return TYPE_ENUM;
 
     if (ParseNode *ident = firstTerminal(typeNode, "ident"))
         return resolveTypeName(terminalValue(ident));
@@ -356,6 +360,8 @@ bool SemanticAnalyzer::isCompatible(TypeCode t1, TypeCode t2)
         return true;
     if ((t1 == TYPE_REAL && t2 == TYPE_INTEGER) || (t1 == TYPE_INTEGER && t2 == TYPE_REAL))
         return true;
+    if (t1 == TYPE_ENUM && t2 == TYPE_ENUM)
+        return true;
     return false;
 }
 
@@ -366,6 +372,8 @@ bool SemanticAnalyzer::isRelationalCompatible(TypeCode t1, TypeCode t2)
     // integer dan real boleh dibandingkan satu sama lain
     if ((t1 == TYPE_INTEGER || t1 == TYPE_REAL) && (t2 == TYPE_INTEGER || t2 == TYPE_REAL))
         return true;
+    if (t1 == TYPE_ENUM && t2 == TYPE_ENUM)
+        return true;
     return false;
 }
 
@@ -374,6 +382,8 @@ bool SemanticAnalyzer::isAssignCompatible(TypeCode target, TypeCode value)
     if (target == value)
         return true;
     if (target == TYPE_REAL && value == TYPE_INTEGER)
+        return true;
+    if (target == TYPE_ENUM && value == TYPE_ENUM)
         return true;
     return false;
 }
@@ -459,6 +469,7 @@ string SemanticAnalyzer::typeCodeToString(TypeCode t)
     case TYPE_ARRAY:    return "array";
     case TYPE_RECORD:   return "record";
     case TYPE_SUBRANGE: return "subrange";
+    case TYPE_ENUM:     return "enum";
     default:            return "";
     }
 }
@@ -575,6 +586,25 @@ vector<ASTPtr> SemanticAnalyzer::visitTypeDecl(ParseNode *node)
 
         int idx = symtab.enter(name, OBJ_TYPE, typeCode, arrayRef, 1, 0);
         (void)idx;
+
+        if (typeCode == TYPE_ENUM)
+        {
+            ParseNode *enumNode = child(typeParse, "<enumerated>");
+            int ordinal = 0;
+
+            for (ParseNode *enumIdent : allTerminals(enumNode, "ident"))
+            {
+                symtab.enter(
+                    terminalValue(enumIdent),
+                    OBJ_CONSTANT,
+                    TYPE_ENUM,
+                    0,
+                    1,
+                    ordinal++
+                );
+            }
+        }
+
         result.push_back(make_unique<TypeDeclNode>(
             name,
             createTypeNode(typeParse)));
@@ -1251,9 +1281,10 @@ ASTPtr SemanticAnalyzer::visitCaseStmt(ParseNode *node)
     TypeCode selType = getTypeFromAST(selector.get());
 
     if (selType != TYPE_NONE && selType != TYPE_INTEGER &&
-        selType != TYPE_CHAR && selType != TYPE_BOOLEAN)
+        selType != TYPE_CHAR && selType != TYPE_BOOLEAN &&
+        selType != TYPE_ENUM)
     {
-        semanticError("case selector must be integer, char, or boolean");
+        semanticError("case selector must be ordinal type");
     }
 
     vector<ASTPtr> arms;
