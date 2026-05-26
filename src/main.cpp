@@ -3,6 +3,7 @@
 #include "ast_builder.hpp"
 #include "semantic_analyzer.hpp"
 #include "code_generator.hpp"
+#include "interpreter.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -49,7 +50,7 @@ int main(int argc, char* argv[])
                   << "  --m1   : tokens only\n"
                   << "  --m2   : tokens + parse tree\n"
                   << "  --m3   : tokens + parse tree + decorated AST + symbol tables\n"
-                  << "  --m4   : --m3 + intermediate code (TAC)\n"
+                  << "  --m4   : --m3 + intermediate code (TAC) + interpreter output\n"
                   << "  --full : sama dengan --m3\n";
         return 1;
     }
@@ -150,6 +151,13 @@ int main(int argc, char* argv[])
 
         codegen.printCode(code, std::cout);
         if (fileOut.is_open()) codegen.printCode(code, fileOut);
+
+        /* ── M4: Stack Machine Interpreter ── */
+        std::cout << "\n--- PROGRAM OUTPUT ---\n";
+        Interpreter interpreter(code, codegen.stringPool());
+        interpreter.run(std::cout, std::cerr);
+        if (!interpreter.lastError().empty())
+            return 1;
 
     } catch (const ParseError& e) {
         std::cerr << e.what() << "\n";
