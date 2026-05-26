@@ -1,5 +1,6 @@
 #include "code_generator.hpp"
 
+#include <cstring>
 #include <stdexcept>
 #include <iomanip>
 
@@ -49,18 +50,28 @@ int CodeGenerator::levelDiff(int targetLevel) const {
     return currentLevel_ - targetLevel;
 }
 
-// Hitung offset variabel dalam frame: jumlah variabel di scope yang sama
-// dengan lev == targetLev dan tab index < tabIdx (urutan deklarasi).
+// Offset absolut variabel dalam frame (3 = SL,DL,RA).
+// Hanya menghitung variabel dalam subprogram/blok yang sama.
 int CodeGenerator::getVarOffset(int tabIdx) const {
-    if (tabIdx < 0 || tabIdx >= (int)symtab_.tab.size()) return 0;
+    if (tabIdx < 0 || tabIdx >= (int)symtab_.tab.size()) return 3;
     int targetLev = symtab_.tab[tabIdx].lev;
+
+    int ownerIdx = 32;
+    for (int i = tabIdx; i >= 33; --i) {
+        const TabEntry& e = symtab_.tab[i];
+        if ((e.obj == OBJ_PROCEDURE || e.obj == OBJ_FUNCTION) && e.lev < targetLev) {
+            ownerIdx = i;
+            break;
+        }
+    }
+
     int offset = 0;
-    for (int i = 33; i < tabIdx; i++) {
+    for (int i = ownerIdx + 1; i < tabIdx; ++i) {
         const TabEntry& e = symtab_.tab[i];
         if (e.lev == targetLev && e.obj == OBJ_VARIABLE)
-            offset++;
+            ++offset;
     }
-    return offset;
+    return offset + 3;
 }
 
 void CodeGenerator::genProgram(ProgramNode* node) {
@@ -99,12 +110,21 @@ void CodeGenerator::genDeclarations(const std::vector<ASTPtr>& decls) {
     }
 }
 
-// Helper bersama untuk proc dan func decl
-static int getBtabVsze(const SymbolTable& st, int tabIdx) {
+// Hitung variabel (termasuk parameter) milik subprogram: entri setelah tabIdx
+// hingga subprogram lain di level lexical yang sama.
+static int getSubprogramVarSize(const SymbolTable& st, int tabIdx) {
     if (tabIdx < 0 || tabIdx >= (int)st.tab.size()) return 0;
-    int btabIdx = st.tab[tabIdx].ref;
-    if (btabIdx <= 0 || btabIdx >= (int)st.btab.size()) return 0;
-    return st.btab[btabIdx].vsze;
+    int fnLev = st.tab[tabIdx].lev;
+    int varLev = fnLev + 1;
+    int count = 0;
+    for (int i = tabIdx + 1; i < (int)st.tab.size(); ++i) {
+        const TabEntry& e = st.tab[i];
+        if ((e.obj == OBJ_PROCEDURE || e.obj == OBJ_FUNCTION) && e.lev == fnLev)
+            break;
+        if (e.lev == varLev && e.obj == OBJ_VARIABLE)
+            ++count;
+    }
+    return count;
 }
 
 void CodeGenerator::genProcDecl(ProcedureDeclNode* node) {
@@ -112,7 +132,7 @@ void CodeGenerator::genProcDecl(ProcedureDeclNode* node) {
     int entryPoint = (int)code_.size();
 
     currentLevel_++;
-    emit("INT", 0, getBtabVsze(symtab_, tabIdx) + 3);
+    emit("INT", 0, getSubprogramVarSize(symtab_, tabIdx) + 3);
     genDeclarations(node->declarations);
     if (node->block)
         genBlock(static_cast<BlockNode*>(node->block.get()));
@@ -127,7 +147,7 @@ void CodeGenerator::genFuncDecl(FunctionDeclNode* node) {
     int entryPoint = (int)code_.size();
 
     currentLevel_++;
-    emit("INT", 0, getBtabVsze(symtab_, tabIdx) + 3);
+    emit("INT", 0, getSubprogramVarSize(symtab_, tabIdx) + 3);
     genDeclarations(node->declarations);
     if (node->block)
         genBlock(static_cast<BlockNode*>(node->block.get()));
@@ -405,6 +425,11 @@ void CodeGenerator::genLValue(ASTNode* node) {
         if (tabIdx < 0) tabIdx = symtab_.lookup(vn->name);
         if (tabIdx < 0 || tabIdx >= (int)symtab_.tab.size()) return;
         const TabEntry& e = symtab_.tab[tabIdx];
+        if (e.obj == OBJ_FUNCTION) {
+            // Nilai kembalian fungsi disimpan di slot pertama frame aktif (offset 3).
+            emit("STO", 0, 3);
+            return;
+        }
         emit("STO", levelDiff(e.lev), getVarOffset(tabIdx));
 
     } else if (node->kind == ASTKind::ArrayAccess) {
