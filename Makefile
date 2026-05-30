@@ -8,6 +8,7 @@ BIN_DIR  = bin
 T1       = test/milestone-1
 T2       = test/milestone-2
 T3       = test/milestone-3
+T4       = test/milestone-4
 
 # File source
 SRCS     = $(SRC_DIR)/main.cpp $(SRC_DIR)/lex_analyzer.cpp $(SRC_DIR)/parser.cpp \
@@ -78,15 +79,43 @@ test3-4: all; mkdir -p $(T3)
 test3-5: all; mkdir -p $(T3)
 	./$(TARGET) $(T3)/input-5.txt $(T3)/output-5.txt --m3
 
-#  Run manual: make run INPUT=... OUTPUT=... FLAG=--m3 
+#  M4: full pipeline + interpreter output
+test4:   all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-1.txt $(T4)/output-1.txt --m4
+	./$(TARGET) $(T4)/input-2.txt $(T4)/output-2.txt --m4
+	./$(TARGET) $(T4)/input-3.txt $(T4)/output-3.txt --m4
+	./$(TARGET) $(T4)/input-4.txt $(T4)/output-4.txt --m4
+	./$(TARGET) $(T4)/input-5.txt $(T4)/output-5.txt --m4
+	./$(TARGET) $(T4)/input-7.txt $(T4)/output-7.txt --m4
+	./$(TARGET) $(T4)/input-8.txt $(T4)/output-8.txt --m4
+
+test4-1: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-1.txt $(T4)/output-1.txt --m4
+test4-2: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-2.txt $(T4)/output-2.txt --m4
+test4-3: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-3.txt $(T4)/output-3.txt --m4
+test4-4: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-4.txt $(T4)/output-4.txt --m4
+test4-5: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-5.txt $(T4)/output-5.txt --m4
+test4-6: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-6.txt $(T4)/output-6.txt --m4
+test4-7: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-7.txt $(T4)/output-7.txt --m4
+test4-8: all; mkdir -p $(T4)
+	./$(TARGET) $(T4)/input-8.txt $(T4)/output-8.txt --m4
+
+#  Run manual: make run INPUT=... OUTPUT=... FLAG=--m4
 run: all
 	./$(TARGET) $(INPUT) $(OUTPUT) $(FLAG)
 
-#  Bersihkan 
+#  Bersihkan
 clean:
 	rm -rf $(BIN_DIR)
 
 .PHONY: all run clean \
         test1 test1-1 test1-2 test1-3 test1-4 test1-5 \
         test2 test2-1 test2-2 test2-3 test2-4 test2-5 \
-        test3 test3-1 test3-2 test3-3 test3-4 test3-5
+        test3 test3-1 test3-2 test3-3 test3-4 test3-5 \
+        test4 test4-1 test4-2 test4-3 test4-4 test4-5 test4-6 test4-7 test4-8

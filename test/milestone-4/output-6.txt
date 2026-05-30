@@ -1,0 +1,20 @@
+
+--- INTERMEDIATE CODE ---
+IDX   OP      LEVEL   VAL     
+0     JMP     0       1       
+1     INT     0       5       
+2     LIT     0       10      
+3     STO     0       3       
+4     LIT     0       0       
+5     STO     0       4       
+6     LOD     0       3       
+7     LOD     0       4       
+8     OPR     0       5       
+9     STO     0       3       
+10    LOD     0       3       
+11    OPR     0       14      
+12    OPR     0       15      
+13    OPR     0       0       
+
+--- PROGRAM OUTPUT ---
+Runtime error: Division by zero

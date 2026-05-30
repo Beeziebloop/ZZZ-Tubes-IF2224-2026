@@ -1,0 +1,12 @@
+
+--- INTERMEDIATE CODE ---
+IDX   OP      LEVEL   VAL     
+0     JMP     0       1       
+1     INT     0       3       
+2     LIT     0       0       
+3     OPR     0       14      
+4     OPR     0       15      
+5     OPR     0       0       
+
+--- PROGRAM OUTPUT ---
+Hello, Arion!

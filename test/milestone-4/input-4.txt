@@ -1,0 +1,10 @@
+program ForLoopTest;
+var
+  i, result: integer;
+begin
+  result := 1;
+  for i := 1 to 5 do begin
+    result := result * i;
+  end;
+  writeln(result);
+end.

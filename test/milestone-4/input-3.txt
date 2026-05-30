@@ -1,0 +1,12 @@
+program IfElseTest;
+var
+  x, y: integer;
+begin
+  x := 10;
+  if x > 5 then begin
+    y := 1;
+  end else begin
+    y := 0;
+  end;
+  writeln(y);
+end.

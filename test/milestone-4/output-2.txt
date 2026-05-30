@@ -1,0 +1,29 @@
+
+--- INTERMEDIATE CODE ---
+IDX   OP      LEVEL   VAL     
+0     JMP     0       1       
+1     INT     0       5       
+2     LIT     0       0       
+3     STO     0       4       
+4     LIT     0       1       
+5     STO     0       3       
+6     LOD     0       3       
+7     LIT     0       5       
+8     OPR     0       12      
+9     JPC     0       19      
+10    LOD     0       4       
+11    LOD     0       3       
+12    OPR     0       2       
+13    STO     0       4       
+14    LOD     0       3       
+15    LIT     0       1       
+16    OPR     0       2       
+17    STO     0       3       
+18    JMP     0       6       
+19    LOD     0       4       
+20    OPR     0       14      
+21    OPR     0       15      
+22    OPR     0       0       
+
+--- PROGRAM OUTPUT ---
+15

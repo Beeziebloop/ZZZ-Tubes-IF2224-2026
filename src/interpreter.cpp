@@ -293,15 +293,6 @@ void Interpreter::execOpr(int op, std::ostream& out) {
             return;
         }
         case OPR_WRTLN: {
-            // writeln: arg sudah dicetak OPR_WRT; tanpa arg hanya newline.
-            if (sp_ >= 0) {
-                int v = pop();
-                if (v >= 0 && v < static_cast<int>(stringPool_.size())) {
-                    out << stringPool_[static_cast<size_t>(v)];
-                } else {
-                    out << v;
-                }
-            }
             out << "\n";
             return;
         }
