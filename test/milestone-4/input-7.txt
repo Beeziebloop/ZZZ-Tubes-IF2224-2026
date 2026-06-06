@@ -1,0 +1,10 @@
+program RepeatTest;
+var
+  x: integer;
+begin
+  x := 1;
+  repeat
+    x := x * 2;
+  until x >= 16;
+  writeln(x);
+end.

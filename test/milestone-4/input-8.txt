@@ -1,0 +1,4 @@
+program StringTest;
+begin
+  writeln('Hello, Arion!');
+end.

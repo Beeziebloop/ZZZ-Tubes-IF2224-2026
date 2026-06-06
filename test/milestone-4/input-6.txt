@@ -1,0 +1,9 @@
+program ErrorDivZero;
+var
+  a, b: integer;
+begin
+  a := 10;
+  b := 0;
+  a := a div b;
+  writeln(a);
+end.

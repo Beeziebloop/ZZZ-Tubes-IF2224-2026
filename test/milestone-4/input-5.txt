@@ -1,0 +1,14 @@
+program ProcedureTest;
+var
+  n, d: integer;
+
+procedure printDouble(x: integer);
+begin
+  d := x * 2;
+  writeln(d);
+end;
+
+begin
+  n := 7;
+  printDouble(n);
+end.
