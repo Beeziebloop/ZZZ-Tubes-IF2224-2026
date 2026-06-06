@@ -1,0 +1,17 @@
+program Arithmetic;
+var
+  a, b: integer;
+  x, y: real;
+  res: real;
+begin
+  a := 10;
+  b := 3;
+  x := 2.5;
+  y := 1.5;
+  res := a + b;
+  res := x * y;
+  res := a / b;
+  a := a div b;
+  a := a mod b;
+  res := x - y;
+end.

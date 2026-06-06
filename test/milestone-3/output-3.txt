@@ -1,0 +1,183 @@
+
+--- ABSTRACT SYNTAX TREE ---
+ProgramNode(name: 'ControlFlow')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'found')
+      TypeName(boolean)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('i')
+        value:
+          IntegerNumber(1)
+      Assign
+        target:
+          Var('found')
+        value:
+          Var('false')
+      While
+        condition:
+          BinOp('<=')
+            Var('i')
+            IntegerNumber(10)
+        body:
+          BlockNode
+            If
+              condition:
+                BinOp('=')
+                  BinOp('mod')
+                    Var('i')
+                    IntegerNumber(2)
+                  IntegerNumber(0)
+              then:
+                BlockNode
+                  Assign
+                    target:
+                      Var('found')
+                    value:
+                      Var('true')
+                  ProcedureCall(name: 'writeln')
+                    Var('i')
+            Assign
+              target:
+                Var('i')
+              value:
+                BinOp('+')
+                  Var('i')
+                  IntegerNumber(1)
+      Repeat
+        body:
+          BlockNode
+            Assign
+              target:
+                Var('i')
+              value:
+                BinOp('-')
+                  Var('i')
+                  IntegerNumber(1)
+        until:
+          BinOp('=')
+            Var('i')
+            IntegerNumber(0)
+
+--- DECORATED AST ---
+ProgramNode(name: 'ControlFlow')
+  Declarations
+    VarDecl(name: 'i')
+      TypeName(integer)
+    VarDecl(name: 'found')
+      TypeName(boolean)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('i' : integer [tab=43, lev=0])
+        value:
+          IntegerNumber(1 : integer)
+      Assign
+        target:
+          Var('found' : boolean [tab=44, lev=0])
+        value:
+          Var('false' : boolean [tab=39, lev=0])
+      While
+        condition:
+          BinOp('<=' : boolean)
+            Var('i' : integer [tab=43, lev=0])
+            IntegerNumber(10 : integer)
+        body:
+          BlockNode
+            If
+              condition:
+                BinOp('=' : boolean)
+                  BinOp('mod' : integer)
+                    Var('i' : integer [tab=43, lev=0])
+                    IntegerNumber(2 : integer)
+                  IntegerNumber(0 : integer)
+              then:
+                BlockNode
+                  Assign
+                    target:
+                      Var('found' : boolean [tab=44, lev=0])
+                    value:
+                      Var('true' : boolean [tab=38, lev=0])
+                  ProcedureCall(name: 'writeln')
+                    Var('i' : integer [tab=43, lev=0])
+            Assign
+              target:
+                Var('i' : integer [tab=43, lev=0])
+              value:
+                BinOp('+' : integer)
+                  Var('i' : integer [tab=43, lev=0])
+                  IntegerNumber(1 : integer)
+      Repeat
+        body:
+          BlockNode
+            Assign
+              target:
+                Var('i' : integer [tab=43, lev=0])
+              value:
+                BinOp('-' : integer)
+                  Var('i' : integer [tab=43, lev=0])
+                  IntegerNumber(1 : integer)
+        until:
+          BinOp('=' : boolean)
+            Var('i' : integer [tab=43, lev=0])
+            IntegerNumber(0 : integer)
+
+===== TAB =====
+IDX  IDENT          LINK      OBJ       TYPE      REF       NRM       LEV       ADR       
+0    and            0         2         0         0         1         0         0         
+1    array          0         2         0         0         1         0         0         
+2    begin          0         2         0         0         1         0         0         
+3    case           0         2         0         0         1         0         0         
+4    const          0         2         0         0         1         0         0         
+5    div            0         2         0         0         1         0         0         
+6    downto         0         2         0         0         1         0         0         
+7    do             0         2         0         0         1         0         0         
+8    else           0         2         0         0         1         0         0         
+9    end            0         2         0         0         1         0         0         
+10   for            0         2         0         0         1         0         0         
+11   function       0         2         0         0         1         0         0         
+12   if             0         2         0         0         1         0         0         
+13   mod            0         2         0         0         1         0         0         
+14   not            0         2         0         0         1         0         0         
+15   of             0         2         0         0         1         0         0         
+16   or             0         2         0         0         1         0         0         
+17   procedure      0         2         0         0         1         0         0         
+18   program        0         2         0         0         1         0         0         
+19   record         0         2         0         0         1         0         0         
+20   repeat         0         2         0         0         1         0         0         
+21   integer        0         2         0         0         1         0         0         
+22   real           0         2         0         0         1         0         0         
+23   boolean        0         2         0         0         1         0         0         
+24   char           0         2         0         0         1         0         0         
+25   string         0         2         0         0         1         0         0         
+26   then           0         2         0         0         1         0         0         
+27   to             0         2         0         0         1         0         0         
+28   type           0         2         0         0         1         0         0         
+29   until          0         2         0         0         1         0         0         
+30   var            0         2         0         0         1         0         0         
+31   while          0         2         0         0         1         0         0         
+32   (reserved)     0         2         0         0         1         0         0         
+33   integer        0         2         1         0         1         0         0         
+34   real           33        2         2         0         1         0         0         
+35   char           34        2         3         0         1         0         0         
+36   boolean        35        2         4         0         1         0         0         
+37   string         36        2         5         0         1         0         0         
+38   true           37        0         4         0         1         0         1         
+39   false          38        0         4         0         1         0         0         
+40   writeln        39        3         0         0         1         0         0         
+41   readln         40        3         0         0         1         0         0         
+42   controlflow    41        5         0         0         1         0         0         
+43   i              42        1         1         0         1         0         0         
+44   found          43        1         4         0         1         0         0         
+
+===== BTAB =====
+IDX  LAST      LPAR      PSZE      VSZE      
+0    44        0         0         2         
+
+===== ATAB =====
+IDX  XTYP      ETYP      EREF      LOW       HIGH      ELSZ      SIZE      

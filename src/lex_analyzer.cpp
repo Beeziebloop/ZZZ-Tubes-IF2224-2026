@@ -243,10 +243,10 @@ Token Lexer::readEquals(){
     int line = currentLine;
     char c = readChar();
     if(c == '='){
-        return Token(EQL, "", line);
+        return Token(EQL, "", line); // == juga diterima (longest match)
     }
     unreadChar(c);
-    return Token(UNKNOWN, "=", line); //= tunggal itu ga valid
+    return Token(EQL, "", line); // = tunggal adalah relational equal di Pascal
 }
 
 Token Lexer::readLParenOrComment(){
@@ -268,7 +268,7 @@ Token Lexer::readBraceComment(){
             return Token(UNKNOWN, "Unterminated comment", line);
         }
         if (c == '}') {
-            return Token(COMMENT, "", line); //komentar selesai
+            return Token(COMMENT, "", line);
         }
         //kalau ada karakter lain tetap di S_CMT_BRACES
     }

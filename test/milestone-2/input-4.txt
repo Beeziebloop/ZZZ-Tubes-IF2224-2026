@@ -1,0 +1,11 @@
+program LiteralsTest;
+
+var
+  x: integer;
+
+begin
+  x := 7;
+  writeln('A');
+  writeln('I''m here');
+  writeln('value = ', 3.1415);
+end.

@@ -1,0 +1,13 @@
+program BasicTypes;
+var
+  i: integer;
+  r: real;
+  c: char;
+  b: boolean;
+begin
+  i := 42;
+  r := 3.14;
+  c := 'A';
+  b := true;
+  r := i;
+end.

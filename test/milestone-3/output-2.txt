@@ -1,0 +1,216 @@
+
+--- ABSTRACT SYNTAX TREE ---
+ProgramNode(name: 'Arithmetic')
+  Declarations
+    VarDecl(name: 'a')
+      TypeName(integer)
+    VarDecl(name: 'b')
+      TypeName(integer)
+    VarDecl(name: 'x')
+      TypeName(real)
+    VarDecl(name: 'y')
+      TypeName(real)
+    VarDecl(name: 'res')
+      TypeName(real)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('a')
+        value:
+          IntegerNumber(10)
+      Assign
+        target:
+          Var('b')
+        value:
+          IntegerNumber(3)
+      Assign
+        target:
+          Var('x')
+        value:
+          RealNumber(2.5)
+      Assign
+        target:
+          Var('y')
+        value:
+          RealNumber(1.5)
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('+')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('*')
+            Var('x')
+            Var('y')
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('/')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('a')
+        value:
+          BinOp('div')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('a')
+        value:
+          BinOp('mod')
+            Var('a')
+            Var('b')
+      Assign
+        target:
+          Var('res')
+        value:
+          BinOp('-')
+            Var('x')
+            Var('y')
+      Empty
+
+--- DECORATED AST ---
+ProgramNode(name: 'Arithmetic')
+  Declarations
+    VarDecl(name: 'a')
+      TypeName(integer)
+    VarDecl(name: 'b')
+      TypeName(integer)
+    VarDecl(name: 'x')
+      TypeName(real)
+    VarDecl(name: 'y')
+      TypeName(real)
+    VarDecl(name: 'res')
+      TypeName(real)
+  Block
+    BlockNode
+      Assign
+        target:
+          Var('a' : integer [tab=43, lev=0])
+        value:
+          IntegerNumber(10 : integer)
+      Assign
+        target:
+          Var('b' : integer [tab=44, lev=0])
+        value:
+          IntegerNumber(3 : integer)
+      Assign
+        target:
+          Var('x' : real [tab=45, lev=0])
+        value:
+          RealNumber(2.5 : real)
+      Assign
+        target:
+          Var('y' : real [tab=46, lev=0])
+        value:
+          RealNumber(1.5 : real)
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('+' : integer)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('*' : real)
+            Var('x' : real [tab=45, lev=0])
+            Var('y' : real [tab=46, lev=0])
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('/' : real)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('a' : integer [tab=43, lev=0])
+        value:
+          BinOp('div' : integer)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('a' : integer [tab=43, lev=0])
+        value:
+          BinOp('mod' : integer)
+            Var('a' : integer [tab=43, lev=0])
+            Var('b' : integer [tab=44, lev=0])
+      Assign
+        target:
+          Var('res' : real [tab=47, lev=0])
+        value:
+          BinOp('-' : real)
+            Var('x' : real [tab=45, lev=0])
+            Var('y' : real [tab=46, lev=0])
+      Empty
+
+===== TAB =====
+IDX  IDENT          LINK      OBJ       TYPE      REF       NRM       LEV       ADR       
+0    and            0         2         0         0         1         0         0         
+1    array          0         2         0         0         1         0         0         
+2    begin          0         2         0         0         1         0         0         
+3    case           0         2         0         0         1         0         0         
+4    const          0         2         0         0         1         0         0         
+5    div            0         2         0         0         1         0         0         
+6    downto         0         2         0         0         1         0         0         
+7    do             0         2         0         0         1         0         0         
+8    else           0         2         0         0         1         0         0         
+9    end            0         2         0         0         1         0         0         
+10   for            0         2         0         0         1         0         0         
+11   function       0         2         0         0         1         0         0         
+12   if             0         2         0         0         1         0         0         
+13   mod            0         2         0         0         1         0         0         
+14   not            0         2         0         0         1         0         0         
+15   of             0         2         0         0         1         0         0         
+16   or             0         2         0         0         1         0         0         
+17   procedure      0         2         0         0         1         0         0         
+18   program        0         2         0         0         1         0         0         
+19   record         0         2         0         0         1         0         0         
+20   repeat         0         2         0         0         1         0         0         
+21   integer        0         2         0         0         1         0         0         
+22   real           0         2         0         0         1         0         0         
+23   boolean        0         2         0         0         1         0         0         
+24   char           0         2         0         0         1         0         0         
+25   string         0         2         0         0         1         0         0         
+26   then           0         2         0         0         1         0         0         
+27   to             0         2         0         0         1         0         0         
+28   type           0         2         0         0         1         0         0         
+29   until          0         2         0         0         1         0         0         
+30   var            0         2         0         0         1         0         0         
+31   while          0         2         0         0         1         0         0         
+32   (reserved)     0         2         0         0         1         0         0         
+33   integer        0         2         1         0         1         0         0         
+34   real           33        2         2         0         1         0         0         
+35   char           34        2         3         0         1         0         0         
+36   boolean        35        2         4         0         1         0         0         
+37   string         36        2         5         0         1         0         0         
+38   true           37        0         4         0         1         0         1         
+39   false          38        0         4         0         1         0         0         
+40   writeln        39        3         0         0         1         0         0         
+41   readln         40        3         0         0         1         0         0         
+42   arithmetic     41        5         0         0         1         0         0         
+43   a              42        1         1         0         1         0         0         
+44   b              43        1         1         0         1         0         0         
+45   x              44        1         2         0         1         0         0         
+46   y              45        1         2         0         1         0         0         
+47   res            46        1         2         0         1         0         0         
+
+===== BTAB =====
+IDX  LAST      LPAR      PSZE      VSZE      
+0    47        0         0         5         
+
+===== ATAB =====
+IDX  XTYP      ETYP      EREF      LOW       HIGH      ELSZ      SIZE      

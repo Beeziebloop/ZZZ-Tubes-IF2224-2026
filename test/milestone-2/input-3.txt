@@ -1,0 +1,11 @@
+Program MixCase;
+
+var
+  Alpha1, beta2: integer;
+
+begin
+  { komentar gaya brace }
+  Alpha1 := 12;
+  (* komentar gaya parenthesis-star *)
+  beta2 := Alpha1 + 3;
+end.

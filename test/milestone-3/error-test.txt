@@ -1,0 +1,12 @@
+program TypeErrorTest;
+var
+  x: integer;
+  y: real;
+  b: boolean;
+begin
+  b := x + y;
+  x := b;
+  x := x div y;
+  b := b + x;
+  if x then writeln('bad');
+end.
