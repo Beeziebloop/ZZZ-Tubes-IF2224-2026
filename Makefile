@@ -66,6 +66,7 @@ test3:   all; mkdir -p $(T3)
 	./$(TARGET) $(T3)/input-3.txt $(T3)/output-3.txt --m3
 	./$(TARGET) $(T3)/input-4.txt $(T3)/output-4.txt --m3
 	./$(TARGET) $(T3)/input-5.txt $(T3)/output-5.txt --m3
+	./$(TARGET) $(T3)/input-6.txt $(T3)/output-6.txt --m3
 
 test3-1: all; mkdir -p $(T3)
 	./$(TARGET) $(T3)/input-1.txt $(T3)/output-1.txt --m3
@@ -77,6 +78,8 @@ test3-4: all; mkdir -p $(T3)
 	./$(TARGET) $(T3)/input-4.txt $(T3)/output-4.txt --m3
 test3-5: all; mkdir -p $(T3)
 	./$(TARGET) $(T3)/input-5.txt $(T3)/output-5.txt --m3
+test3-6: all; mkdir -p $(T3)
+	./$(TARGET) $(T3)/input-6.txt $(T3)/output-6.txt --m3
 
 #  Run manual: make run INPUT=... OUTPUT=... FLAG=--m3 
 run: all
@@ -89,4 +92,4 @@ clean:
 .PHONY: all run clean \
         test1 test1-1 test1-2 test1-3 test1-4 test1-5 \
         test2 test2-1 test2-2 test2-3 test2-4 test2-5 \
-        test3 test3-1 test3-2 test3-3 test3-4 test3-5
+        test3 test3-1 test3-2 test3-3 test3-4 test3-5 test3-6

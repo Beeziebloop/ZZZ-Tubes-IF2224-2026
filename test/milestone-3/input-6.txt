@@ -1,0 +1,15 @@
+program EnumTest;
+type
+    Color == (red, green, blue);
+
+var
+    c: Color;
+
+begin
+    c := red;
+
+    if c == green then
+    begin
+        writeln('green');
+    end;
+end.
